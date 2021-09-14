@@ -7,8 +7,11 @@ name = "pypi"
 django="*"
 django-rest-framework="*"
 psycopg2-binary="*"
+environ = "*"
+factory-boy="*"
 
 [dev-packages]
+#factory boy powino być tutaj i wedy powinnam zrobić pipenv install --dev
 
 [requires]
 python_version = "3.8"
