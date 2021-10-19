@@ -28,6 +28,7 @@ class GameFactory(factory.django.DjangoModelFactory):
 
 class RoundFactory(factory.django.DjangoModelFactory):
     game = factory.SubFactory(GameFactory)
+    user = factory.SelfAttribute('game.room.host')
 
     class Meta:
         model = Round

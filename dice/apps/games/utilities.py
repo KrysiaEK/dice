@@ -8,34 +8,33 @@ def roll_dices():
     return dices
 
 
-"""
-def calculate_points(dices, selected_field):
-    if selected_field == 0:
-        return dices.count(1) * 1
-    elif selected_field == 1:
-        return dices.count(2) * 2
-    elif selected_field == 2:
-        return dices.count(3) * 3
-    elif selected_field == 3:
-        return dices.count(4) * 4
-    elif selected_field == 4:
-        return dices.count(5) * 5
-    elif selected_field == 5:
-        return dices.count(6) * 6
-    elif selected_field == 6:
-        for i in range(1, 7):
-            if dices.count(i) >= 3:
-                return sum(dices)
-    elif selected_field == 7:
-        for i in range(1, 7):
-            if dices.count(i) >= 4:
-                return sum(dices)
-    elif selected_field == 8: # 2 + 3
-    elif selected_field == 9:  # mały strit
-    elif selected_field == 10:  # duży strit
-    elif selected_field == 11:  # generał
+class Figures:
+    ONE = 1
+    TWO = 2
+    THREE = 3
+    FOUR = 4
+    FIVE = 5
+    SIX = 6
+    TRIO = 7
+    QUATRO = 8
+    FULL_HOUSE = 25
+    SMALL_STRAIGHT = 30
+    LARGE_STRAIGHT = 40
+    YATZY = 50
+    CHANCE = 100
 
-    elif selected_field == 12:
-        return sum(dices)
-        
-"""
+    Choices = (
+        (ONE, '1'),
+        (TWO, '2'),
+        (THREE, '3'),
+        (FOUR, '4'),
+        (FIVE, '5'),
+        (SIX, '6'),
+        (TRIO, '3x'),
+        (QUATRO, '4x'),
+        (FULL_HOUSE, "3+2x"),
+        (SMALL_STRAIGHT, 'Small straight'),
+        (LARGE_STRAIGHT, 'Large straight'),
+        (YATZY, 'Yatzy'),
+        (CHANCE, 'Chance')
+    )
