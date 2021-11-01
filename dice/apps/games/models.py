@@ -13,20 +13,10 @@ class Room(models.Model):
 
 class Game(models.Model):
     room = models.OneToOneField(Room, on_delete=models.CASCADE)
-    # jak że w rround będzie one to one to można użyć game.round żeby dostać round
-    # która runda (tak jak turn w Round)
-    # on to many do Pole, a jak się tworzy game to automatycznie stworzyć 2 pola dla jednego gracza
-    # czyja kolej, mogę wyznaczyć to po numerze rundy (% to reszta z dzielenia)
-
-# klejny model o nazwie POLE, pole ma swój typ (np. strit, choice field), info czu zotsał wybrany czy nie, a jak został
-# wybrany
-# to ile ma pkt (mogę usatwić jako null i jęlsi nie jest nullem to że zotał wybrany już, nawet jak ma 0 LUB
-# BooleanField)
 
 
 class Dice(models.Model):
     value = models.PositiveSmallIntegerField()
-    chosen = models.BooleanField(default=False)
 
     @classmethod
     def create(cls):
@@ -47,15 +37,19 @@ class Round(models.Model):
     )
     game = models.ForeignKey(Game, on_delete=models.CASCADE)
     user = models.ForeignKey('users.User', on_delete=models.CASCADE)
-    dice1 = models.OneToOneField(Dice, on_delete=models.CASCADE, related_name='round_as_first_dice', default=Dice.create)
-    dice2 = models.OneToOneField(Dice, on_delete=models.CASCADE, related_name='round_as_second_dice', default=Dice.create)
-    dice3 = models.OneToOneField(Dice, on_delete=models.CASCADE, related_name='round_as_third_dice', default=Dice.create)
-    dice4 = models.OneToOneField(Dice, on_delete=models.CASCADE, related_name='round_as_fourth_dice', default=Dice.create)
-    dice5 = models.OneToOneField(Dice, on_delete=models.CASCADE, related_name='round_as_fifth_dice', default=Dice.create)
+    dice1 = models.OneToOneField(Dice, on_delete=models.CASCADE, related_name='round_as_first_dice',
+                                 default=Dice.create)
+    dice2 = models.OneToOneField(Dice, on_delete=models.CASCADE, related_name='round_as_second_dice',
+                                 default=Dice.create)
+    dice3 = models.OneToOneField(Dice, on_delete=models.CASCADE, related_name='round_as_third_dice',
+                                 default=Dice.create)
+    dice4 = models.OneToOneField(Dice, on_delete=models.CASCADE, related_name='round_as_fourth_dice',
+                                 default=Dice.create)
+    dice5 = models.OneToOneField(Dice, on_delete=models.CASCADE, related_name='round_as_fifth_dice',
+                                 default=Dice.create)
     turn = models.PositiveSmallIntegerField(choices=TURN_CHOICES, default=1)
     figure = models.PositiveIntegerField(blank=True, null=True, choices=Figures.Choices)
     points = models.PositiveIntegerField(blank=True, null=True)
-    # number = models.IntegerField(), za każdym razem jak bęę dworzyć rundę
 
     @property
     def dices(self):
@@ -93,7 +87,7 @@ class Round(models.Model):
             return 0
         elif self.figure == Figures.SMALL_STRAIGHT:
             for i in range(1, 4):
-                for x in range(i, i+4):
+                for x in range(i, i + 4):
                     if x not in self.dices:
                         break
                 else:
@@ -101,7 +95,7 @@ class Round(models.Model):
             return 0
         elif self.figure == Figures.LARGE_STRAIGHT:
             for i in range(1, 3):
-                for x in range(i, i+5):
+                for x in range(i, i + 5):
                     if x not in self.dices:
                         break
                 else:

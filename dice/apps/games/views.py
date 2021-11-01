@@ -1,11 +1,11 @@
-from rest_framework import viewsets, serializers
-from rest_framework.status import HTTP_201_CREATED, HTTP_403_FORBIDDEN, HTTP_400_BAD_REQUEST
+from rest_framework import viewsets
+from rest_framework.status import HTTP_201_CREATED, HTTP_403_FORBIDDEN
 from rest_framework.response import Response
 from .models import Room, Round, Game, Dice
-from .serializers import RoomSerializer, RoundSerializer, DiceSerializer, GameSerializer
+from .serializers import RoomSerializer, RoundSerializer, GameSerializer
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
-from .utilities import Figures
+from django.db.models import Sum
 
 
 class RoomViewSet(viewsets.ModelViewSet):
@@ -40,18 +40,38 @@ class RoomViewSet(viewsets.ModelViewSet):
         return Response({'status': 'joined the room', 'game_id': game.id})
 
 
-class GameViewSet(viewsets.ModelViewSet):
-    # policz pkt dnaego użytkownika i porównaj z pkt drugiego użytkownika
-    # popbrać info o wszystkich roundach (informacja o aktualnej rundzie (szukam ostatniej rundy), że by drugi gracz widział co się dzieje u pierwszego lub jeśli go wywali to żeby wiedział na czym stoi)
-    pass
+class GameViewSet(viewsets.ReadOnlyModelViewSet):
+    serializer_class = GameSerializer
+    queryset = Game.objects.all()
+
+    @action(detail=True, methods=['GET'])
+    def count_final_points(self, request, **kwargs):
+        game = self.get_object()
+        final_points = game.round_set.values('user').annotate(points_sum=Sum('points'))
+        try:
+            host_points = final_points.get(user=game.room.host)['points_sum']
+        except Round.DoesNotExist:
+            host_points = 0
+        try:
+            user_points = final_points.get(user=game.room.user)['points_sum']
+        except Round.DoesNotExist:
+            user_points = 0
+        return Response(data={'host_points': host_points, 'user_points': user_points})
+
+    @action(detail=True, methods=['GET'])
+    def get_rounds_queryset(self, request, **kwargs):
+        game = self.get_object()
+        rounds_queryset = game.round_set.all().order_by('id')
+        rounds = RoundSerializer(rounds_queryset, many=True)
+        return Response(data={'all_rounds': rounds.data})
 
 
-class RoundViewSet(viewsets.ModelViewSet):
+# viewsets.ModelViewSet pozwala na usuwanie i modyfikacje, nie moze tego byc, zapytac co zamiast tego
+class RoundViewSet(viewsets.mixins.CreateModelMixin, viewsets.mixins.RetrieveModelMixin, viewsets.GenericViewSet):
     serializer_class = RoundSerializer
     queryset = Round.objects.all()
 
-    def perform_create(self, serializer):
-        game = serializer.validated_data['game']
+    def extra_validation(self, game):
         if not (game.room.user == self.request.user or game.room.host == self.request.user):
             raise PermissionDenied('spadaj zlodzieju tozsamosci')
         if Round.objects.filter(user=self.request.user, figure__isnull=True, game=game).exists():
@@ -59,11 +79,15 @@ class RoundViewSet(viewsets.ModelViewSet):
         if Round.objects.filter(user=self.request.user, game=game).count() == 13:
             raise PermissionDenied('Wszystkie figury są zajęte, nie można utworzyć nowej rundy')
         last_round = Round.objects.filter(game=game).order_by('id').last()
-        if last_round is None: # zrobić z tego jedną linijkę z or i and
+        if last_round is None:  # zrobić z tego jedną linijkę z or i and
             if game.room.host != self.request.user:
                 raise PermissionDenied('Nie Twoja runda')
         elif last_round.user == self.request.user:
             raise PermissionDenied('Nie Twoja runda')
+
+    def perform_create(self, serializer):
+        game = serializer.validated_data['game']
+        self.extra_validation(game)
         super().perform_create(serializer)
 
     @action(detail=True, methods=['PATCH'])
@@ -93,13 +117,11 @@ class RoundViewSet(viewsets.ModelViewSet):
             raise PermissionDenied('nie Twoja runda')
         chosen_figure = request.data.get('figure')
         if game_round.game.round_set.all().filter(user=request.user, figure=chosen_figure).exists():
-            return Response(status=401, data={'error': 'Figura już jest zajeta'})
+            return Response(status=403, data={'error': 'Figura już jest zajeta'})
         game_round.figure = chosen_figure
         game_round.points = game_round.count_points()
         game_round.save()
         return Response(data={'points': game_round.count_points()})
 
-
 # premia za ułożenie 63 pkt na górze
 # premia za 2 generały
-

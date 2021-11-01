@@ -25,7 +25,7 @@ class DiceSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Dice
-        fields = ['id', 'value', 'chosen']
+        fields = ['id', 'value']
 
 
 class RoundSerializer(serializers.ModelSerializer):

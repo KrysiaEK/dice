@@ -73,6 +73,84 @@ class RoomTestCase(APITestCase):
         self.assertIsNotNone(data.get('game'))
 
 
+class GameTestCase(APITestCase):
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.game = GameFactory()
+        cls.host = cls.game.room.host
+        cls.user = cls.game.room.user
+
+    def setUp(self):
+        self.token_host = Token.objects.create(user=self.host)
+        self.token_user = Token.objects.create(user=self.user)
+        self.client_host = self.client_class()
+        self.client_host.credentials(HTTP_AUTHORIZATION='Token ' + self.token_host.key)
+        self.client_user = self.client_class()
+        self.client_user.credentials(HTTP_AUTHORIZATION='Token ' + self.token_user.key)
+
+    def test_count_final_points(self):
+        RoundFactory(game=self.game, user=self.user, figure=Figures.FIVE, points=15)
+        RoundFactory(game=self.game, user=self.user, figure=Figures.LARGE_STRAIGHT, points=40)
+        RoundFactory(game=self.game, user=self.host, figure=Figures.FULL_HOUSE, points=25)
+        RoundFactory(game=self.game, user=self.host, figure=Figures.THREE, points=12)
+        response = self.client_host.get(
+            f'/api/v1/games/{self.game.id}/count_final_points/',
+            format='json',
+        )
+        self.assertEqual(response.json().get('host_points'), 37)
+        self.assertEqual(response.json().get('user_points'), 55)
+        self.assertEqual(response.status_code, 200)
+
+    def test_count_final_points_round_is_none(self):
+        response = self.client_host.get(
+            f'/api/v1/games/{self.game.id}/count_final_points/',
+            format='json',
+        )
+        self.assertEqual(response.json().get('host_points'), 0)
+        self.assertEqual(response.json().get('user_points'), 0)
+        self.assertEqual(response.status_code, 200)
+
+    def test_count_final_points_round_user_is_none(self):
+        RoundFactory(game=self.game, user=self.host, figure=Figures.FULL_HOUSE, points=25)
+        response = self.client_host.get(
+            f'/api/v1/games/{self.game.id}/count_final_points/',
+            format='json',
+        )
+        self.assertEqual(response.json().get('host_points'), 25)
+        self.assertEqual(response.json().get('user_points'), 0)
+        self.assertEqual(response.status_code, 200)
+
+    def test_get_one_round_queryset(self):
+        RoundFactory(game=self.game, user=self.host, figure=Figures.FULL_HOUSE, points=25)
+        response = self.client_host.get(
+            f'/api/v1/games/{self.game.id}/get_rounds_queryset/',
+            format='json',
+        )
+        self.assertEqual(response.status_code, 200)
+
+    def test_get_two_rounds_queryset(self):
+        RoundFactory(game=self.game, user=self.host, figure=Figures.FULL_HOUSE, points=25)
+        RoundFactory(game=self.game, user=self.user, figure=Figures.SMALL_STRAIGHT, points=30)
+        response = self.client_host.get(
+            f'/api/v1/games/{self.game.id}/get_rounds_queryset/',
+            format='json',
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.json().get('all_rounds')), 2)
+
+    def test_get_rounds_from_two_games_queryset(self):
+        game2 = GameFactory()
+        RoundFactory(game=self.game, user=self.host, figure=Figures.FULL_HOUSE, points=0)
+        RoundFactory(game=game2, user=game2.room.host, figure=Figures.SMALL_STRAIGHT, points=30)
+        response = self.client_host.get(
+            f'/api/v1/games/{self.game.id}/get_rounds_queryset/',
+            format='json',
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.json().get('all_rounds')), 1)
+
+
 class RoundTestCase(APITestCase):
     @classmethod
     def setUpClass(cls):
@@ -112,9 +190,7 @@ class RoundTestCase(APITestCase):
             self.game_round.refresh_from_db()
             self.assertEqual(status_code, response.status_code)
 
-#napisać test czy przy przerzucie zmienia się id kości
-
-    def test_create_first_round_by_host(self): #gdzie ten test powinien na prawdę być, bo jeśli jest tu to nie testuje czy stwrzyliśmy nową rudnę, tylko czy stworzyliśmy koleją rundę
+    def test_create_first_round_by_host(self):  # gdzie ten test powinien na prawdę być, bo jeśli jest tu to nie testuje czy stwrzyliśmy nową rudnę, tylko czy stworzyliśmy koleją rundę
         room = RoomFactory(user=self.user, host=self.host)
         game = GameFactory(room=room)
         response = self.client_host.post(
@@ -132,7 +208,7 @@ class RoundTestCase(APITestCase):
         self.assertTrue(data.get('dice4').get('value') < 7)
         self.assertTrue(data.get('dice5').get('value') < 7)
 
-    def test_create_first_round_by_user(self): #gdzie ten test powinien na prawdę być, bo jeśli jest tu to nie testuje czy stwrzyliśmy nową rudnę, tylko czy stworzyliśmy koleją rundę
+    def test_create_first_round_by_user(self):
         room = RoomFactory(user=self.user, host=self.host)
         game = GameFactory(room=room)
         response = self.client_user.post(
@@ -169,7 +245,7 @@ class RoundTestCase(APITestCase):
     def test_create_third_round(self):
         self.game_round.figure = Figures.LARGE_STRAIGHT
         self.game_round.save()
-        round2 = RoundFactory(game=self.game, user=self.user, figure=Figures.FIVE)
+        RoundFactory(game=self.game, user=self.user, figure=Figures.FIVE)
         response = self.client_host.post(
             f'/api/v1/rounds/',
             data={
@@ -203,9 +279,16 @@ class RoundTestCase(APITestCase):
         self.assertEqual(response.json().get('points'), 25)
 
     def test_figure_choice_already_chosen(self):
-        pass
-    
-#jeśli jakieś pole jest już zajęte to zwrócić 403 że nie może
+        self.game_round.figure = Figures.FULL_HOUSE
+        self.game_round.save()
+        response = self.client_host.patch(
+            f'/api/v1/rounds/{self.game_round.id}/figure_choice/',
+            data={
+                'figure': Figures.FULL_HOUSE,
+            },
+            format='json',
+        )
+        self.assertEqual(response.status_code, 403)
 
     def test_choose_figure_for_zero_points(self):
         self.game_round.set_dices(4, 4, 5, 3, 2)
@@ -234,7 +317,23 @@ class RoundTestCase(APITestCase):
         )
         self.assertEqual(response.status_code, 403)
 
-        #zrobić test dla rundy z już wybraną figurą i wspisaną liczbą pkt zwracany jest prawidłowy response z pkt (GET)
+    def test_show_figure_and_points(self):
+        self.game_round.figure = Figures.LARGE_STRAIGHT
+        self.game_round.points = 40
+        self.game_round.save()
+        response = self.client_user.get(
+            f'/api/v1/rounds/{self.game_round.id}/',
+            format='json',
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json().get('points'), 40)
+
+    def test_delete_round(self):
+        response = self.client_user.delete(
+            f'/api/v1/rounds/{self.game_round.id}/',
+            format='json',
+        )
+        self.assertEqual(response.status_code, 405)
 
 
 class NonAPITestCase(TestCase):
@@ -306,5 +405,3 @@ class NonAPITestCase(TestCase):
         self.round.set_dices(5, 5, 4, 3, 6)
         self.round.figure = Figures.CHANCE
         self.assertEqual(self.round.count_points(), 23)
-
-        # napisać testy do wszystkich figur
