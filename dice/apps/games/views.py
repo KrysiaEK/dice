@@ -8,7 +8,8 @@ from rest_framework.exceptions import PermissionDenied
 from django.db.models import Sum, F
 
 
-class RoomViewSet(viewsets.ModelViewSet):
+class RoomViewSet(viewsets.mixins.CreateModelMixin, viewsets.mixins.RetrieveModelMixin, viewsets.mixins.ListModelMixin,
+                  viewsets.GenericViewSet):
     queryset = Room.objects.all()
     serializer_class = RoomSerializer
 

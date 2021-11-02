@@ -9,6 +9,7 @@ django-rest-framework="*"
 psycopg2-binary="*"
 environ = "*"
 factory-boy="*"
+django-cors-headers="*"
 
 [dev-packages]
 #factory boy powino być tutaj i wedy powinnam zrobić pipenv install --dev
