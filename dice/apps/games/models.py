@@ -4,6 +4,8 @@ from django.db import models
 
 from dice.apps.games.utilities import Figures
 
+from django.db.models import Sum
+
 
 class Room(models.Model):
     host = models.ForeignKey('users.User', on_delete=models.CASCADE, related_name="room_host")
@@ -50,6 +52,7 @@ class Round(models.Model):
     turn = models.PositiveSmallIntegerField(choices=TURN_CHOICES, default=1)
     figure = models.PositiveIntegerField(blank=True, null=True, choices=Figures.Choices)
     points = models.PositiveIntegerField(blank=True, null=True)
+    extra_points = models.PositiveIntegerField(default=0)
 
     @property
     def dices(self):
@@ -68,7 +71,7 @@ class Round(models.Model):
         self.dice5.save()
 
     def count_points(self):
-        if self.figure in [Figures.ONE, Figures.TWO, Figures.THREE, Figures.FOUR, Figures.FIVE, Figures.SIX]:
+        if self.figure in Figures.UPPER_FIGURES:
             return self.dices.count(self.figure) * self.figure
         elif self.figure == Figures.TRIO:
             for i in range(1, 7):
@@ -102,10 +105,30 @@ class Round(models.Model):
                     return 40
             return 0
         elif self.figure == Figures.YATZY:
-            for i in range(1, 7):
-                if self.dices.count(i) == 5:
-                    return 50
+            if self.dices.count(self.dice1.value) == 5:
+                return 50
             return 0
         elif self.figure == Figures.CHANCE:
             return sum(self.dices)
         raise Exception('niepoprawna figura')
+
+    def count_extra_points(self):
+        return self.count_extra_points_yatzy() + self.count_extra_points_63()
+
+    def count_extra_points_yatzy(self):
+        super_round = Round.objects.filter(game=self.game, user=self.user, figure=Figures.YATZY, points=50)
+        if not super_round.exists():
+            return 0
+        if not self.figure or self.dices.count(self.dice1.value) != 5:
+            return 0
+        return 50
+
+    def count_extra_points_63(self):
+        upper_figures = Round.objects.filter(game=self.game, user=self.user,
+                                             figure__in=Figures.UPPER_FIGURES).aggregate(sum_points=Sum("points"))
+        upper_figures_points = upper_figures['sum_points']
+        if upper_figures_points is None:
+            return 0
+        if upper_figures_points >= 63 or upper_figures_points + self.count_points() < 63:
+            return 0
+        return 35

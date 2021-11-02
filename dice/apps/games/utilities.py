@@ -38,3 +38,5 @@ class Figures:
         (YATZY, 'Yatzy'),
         (CHANCE, 'Chance')
     )
+
+    UPPER_FIGURES = (ONE, TWO, THREE, FOUR, FIVE, SIX)

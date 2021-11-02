@@ -102,6 +102,19 @@ class GameTestCase(APITestCase):
         self.assertEqual(response.json().get('user_points'), 55)
         self.assertEqual(response.status_code, 200)
 
+    def test_count_final_points_with_extra_points(self):
+        RoundFactory(game=self.game, user=self.user, figure=Figures.FIVE, points=25, extra_points=50)
+        RoundFactory(game=self.game, user=self.user, figure=Figures.LARGE_STRAIGHT, points=40)
+        RoundFactory(game=self.game, user=self.host, figure=Figures.FULL_HOUSE, points=25)
+        RoundFactory(game=self.game, user=self.host, figure=Figures.THREE, points=12)
+        response = self.client_host.get(
+            f'/api/v1/games/{self.game.id}/count_final_points/',
+            format='json',
+        )
+        self.assertEqual(response.json().get('host_points'), 37)
+        self.assertEqual(response.json().get('user_points'), 115)
+        self.assertEqual(response.status_code, 200)
+
     def test_count_final_points_round_is_none(self):
         response = self.client_host.get(
             f'/api/v1/games/{self.game.id}/count_final_points/',
@@ -190,7 +203,7 @@ class RoundTestCase(APITestCase):
             self.game_round.refresh_from_db()
             self.assertEqual(status_code, response.status_code)
 
-    def test_create_first_round_by_host(self):  # gdzie ten test powinien na prawdę być, bo jeśli jest tu to nie testuje czy stwrzyliśmy nową rudnę, tylko czy stworzyliśmy koleją rundę
+    def test_create_first_round_by_host(self):
         room = RoomFactory(user=self.user, host=self.host)
         game = GameFactory(room=room)
         response = self.client_host.post(
@@ -316,6 +329,62 @@ class RoundTestCase(APITestCase):
             format='json',
         )
         self.assertEqual(response.status_code, 403)
+
+    def test_figure_choice_with_extra_points_yatzy(self):
+        self.game_round.set_dices(4, 4, 4, 4, 4)
+        RoundFactory(game=self.game, user=self.host, figure=Figures.YATZY, points=50)
+        response = self.client_host.patch(
+            f'/api/v1/rounds/{self.game_round.id}/figure_choice/',
+            data={
+                'figure': Figures.FOUR,
+            },
+            format='json',
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json().get('extra_points'), 50)
+
+    def test_figure_choice_with_extra_points_yatzy_wrong(self):
+        self.game_round.set_dices(4, 4, 4, 4, 4)
+        RoundFactory(game=self.game, user=self.host, figure=Figures.YATZY, points=0)
+        response = self.client_host.patch(
+            f'/api/v1/rounds/{self.game_round.id}/figure_choice/',
+            data={
+                'figure': Figures.FOUR,
+            },
+            format='json',
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json().get('extra_points'), 0)
+
+    def test_figure_choice_with_extra_points_63(self):
+        self.game_round.set_dices(4, 4, 4, 3, 3)
+        RoundFactory(game=self.game, user=self.host, figure=Figures.SIX, points=24)
+        RoundFactory(game=self.game, user=self.host, figure=Figures.FIVE, points=20)
+        RoundFactory(game=self.game, user=self.host, figure=Figures.FOUR, points=16)
+        response = self.client_host.patch(
+            f'/api/v1/rounds/{self.game_round.id}/figure_choice/',
+            data={
+                'figure': Figures.THREE,
+            },
+            format='json',
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json().get('extra_points'), 35)
+
+    def test_figure_choice_with_extra_points_63_wrong(self):
+        self.game_round.set_dices(4, 4, 4, 3, 3)
+        RoundFactory(game=self.game, user=self.host, figure=Figures.SIX, points=30)
+        RoundFactory(game=self.game, user=self.host, figure=Figures.FIVE, points=20)
+        RoundFactory(game=self.game, user=self.host, figure=Figures.FOUR, points=16)
+        response = self.client_host.patch(
+            f'/api/v1/rounds/{self.game_round.id}/figure_choice/',
+            data={
+                'figure': Figures.THREE,
+            },
+            format='json',
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json().get('extra_points'), 0)
 
     def test_show_figure_and_points(self):
         self.game_round.figure = Figures.LARGE_STRAIGHT

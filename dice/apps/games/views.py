@@ -5,7 +5,7 @@ from .models import Room, Round, Game, Dice
 from .serializers import RoomSerializer, RoundSerializer, GameSerializer
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
-from django.db.models import Sum
+from django.db.models import Sum, F
 
 
 class RoomViewSet(viewsets.ModelViewSet):
@@ -47,7 +47,7 @@ class GameViewSet(viewsets.ReadOnlyModelViewSet):
     @action(detail=True, methods=['GET'])
     def count_final_points(self, request, **kwargs):
         game = self.get_object()
-        final_points = game.round_set.values('user').annotate(points_sum=Sum('points'))
+        final_points = game.round_set.values('user').annotate(points_sum=Sum(F('points') + F('extra_points')))
         try:
             host_points = final_points.get(user=game.room.host)['points_sum']
         except Round.DoesNotExist:
@@ -66,7 +66,6 @@ class GameViewSet(viewsets.ReadOnlyModelViewSet):
         return Response(data={'all_rounds': rounds.data})
 
 
-# viewsets.ModelViewSet pozwala na usuwanie i modyfikacje, nie moze tego byc, zapytac co zamiast tego
 class RoundViewSet(viewsets.mixins.CreateModelMixin, viewsets.mixins.RetrieveModelMixin, viewsets.GenericViewSet):
     serializer_class = RoundSerializer
     queryset = Round.objects.all()
@@ -120,8 +119,6 @@ class RoundViewSet(viewsets.mixins.CreateModelMixin, viewsets.mixins.RetrieveMod
             return Response(status=403, data={'error': 'Figura już jest zajeta'})
         game_round.figure = chosen_figure
         game_round.points = game_round.count_points()
+        game_round.extra_points = game_round.count_extra_points()
         game_round.save()
-        return Response(data={'points': game_round.count_points()})
-
-# premia za ułożenie 63 pkt na górze
-# premia za 2 generały
+        return Response(data={'points': game_round.points, 'extra_points': game_round.extra_points})

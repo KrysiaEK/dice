@@ -41,7 +41,7 @@ class RoundSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Round
-        fields = ['dice1', 'dice2', 'dice3', 'dice4', 'dice5', 'turn', 'user', 'game', 'points']
+        fields = ['dice1', 'dice2', 'dice3', 'dice4', 'dice5', 'turn', 'user', 'game', 'points', 'extra_points']
 
     def create(self, validated_data):
         dices = []
