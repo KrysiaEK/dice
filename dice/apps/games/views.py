@@ -5,7 +5,9 @@ from .models import Room, Round, Game, Dice
 from .serializers import RoomSerializer, RoundSerializer, GameSerializer
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
-from django.db.models import Sum, F
+from .decorators import user_is_authenticated
+
+from .utilities import Figures
 
 
 class RoomViewSet(viewsets.mixins.CreateModelMixin, viewsets.mixins.RetrieveModelMixin, viewsets.mixins.ListModelMixin,
@@ -27,13 +29,15 @@ class RoomViewSet(viewsets.mixins.CreateModelMixin, viewsets.mixins.RetrieveMode
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=HTTP_201_CREATED, headers=headers)
 
+    @user_is_authenticated
     @action(detail=True, methods=['PUT'])
     def join(self, request, **kwargs):
         room = self.get_object()
         if room.user:
             return Response(status=HTTP_403_FORBIDDEN)
-        if request.user and not request.user.is_authenticated:
-            raise PermissionDenied('spadaj zlodzieju tozsamosci')
+        # todo: sprawdz czy request.user nie jest room.host
+        #if request.user and not request.user.is_authenticated:
+        #    raise PermissionDenied('spadaj zlodzieju tozsamosci')
         room.user = request.user
         room.save()
         game = Game.objects.create(room=room)
@@ -48,15 +52,7 @@ class GameViewSet(viewsets.ReadOnlyModelViewSet):
     @action(detail=True, methods=['GET'])
     def count_final_points(self, request, **kwargs):
         game = self.get_object()
-        final_points = game.round_set.values('user').annotate(points_sum=Sum(F('points') + F('extra_points')))
-        try:
-            host_points = final_points.get(user=game.room.host)['points_sum']
-        except Round.DoesNotExist:
-            host_points = 0
-        try:
-            user_points = final_points.get(user=game.room.user)['points_sum']
-        except Round.DoesNotExist:
-            user_points = 0
+        host_points, user_points = game.count_final_points()
         return Response(data={'host_points': host_points, 'user_points': user_points})
 
     @action(detail=True, methods=['GET'])
@@ -122,4 +118,17 @@ class RoundViewSet(viewsets.mixins.CreateModelMixin, viewsets.mixins.RetrieveMod
         game_round.points = game_round.count_points()
         game_round.extra_points = game_round.count_extra_points()
         game_round.save()
+        if game_round.game.round_set.all().count() == 26:
+            game_round.game.update_players_ranking()
         return Response(data={'points': game_round.points, 'extra_points': game_round.extra_points})
+
+    #napisz test dla update_player_rank robię 26 round i puszczam figur choice, wywyołuję figure_choice --> sprawdzić czy wywołuje się funkcja update_player_rank
+    #for choice in choices
+
+    @action(detail=True, methods=['GET'])
+    def count_possible_points(self, request, **kwargs):
+        game_round = self.get_object()
+        possible_points = []
+        for choice in Figures.Choices:
+            possible_points.append(game_round.count_points(choice[0]))
+        return Response(data={'possible_points': possible_points})

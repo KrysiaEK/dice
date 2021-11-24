@@ -404,8 +404,39 @@ class RoundTestCase(APITestCase):
         )
         self.assertEqual(response.status_code, 405)
 
+    def test_count_possble_points(self):
+        self.game_round.set_dices(5, 5, 4, 3, 6)
+        response = self.client_host.get(
+            f'/api/v1/rounds/{self.game_round.id}/count_possible_points/',
+            format='json',
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json().get('possible_points'), [0, 0, 3, 4, 10, 6, 0, 0, 0, 30, 0, 0, 23])
 
-class NonAPITestCase(TestCase):
+
+class NonAPIGameTestCase(TestCase):
+    def setUp(self):
+        self.game = GameFactory()
+        self.host = self.game.room.host
+        self.user = self.game.room.user
+
+    def test_count_score(self):
+        RoundFactory(game=self.game, user=self.host, figure=Figures.SIX, points=30)
+        self.game.update_players_ranking()
+        self.user.refresh_from_db()
+        self.host.refresh_from_db()
+        self.assertEqual(self.host.score, 1210)
+        self.assertEqual(self.user.score, 1190)
+
+    def test_count_score_draw(self):
+        self.game.update_players_ranking()
+        self.user.refresh_from_db()
+        self.host.refresh_from_db()
+        self.assertEqual(self.host.score, 1200)
+        self.assertEqual(self.user.score, 1200)
+
+
+class NonAPIRoundTestCase(TestCase):
     def setUp(self):
         self.round = RoundFactory()
 

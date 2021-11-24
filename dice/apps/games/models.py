@@ -4,7 +4,7 @@ from django.db import models
 
 from dice.apps.games.utilities import Figures
 
-from django.db.models import Sum
+from django.db.models import Sum, F
 
 
 class Room(models.Model):
@@ -15,6 +15,38 @@ class Room(models.Model):
 
 class Game(models.Model):
     room = models.OneToOneField(Room, on_delete=models.CASCADE)
+
+    def count_final_points(self):
+        final_points = self.round_set.values('user').annotate(points_sum=Sum(F('points') + F('extra_points')))
+        try:
+            host_points = final_points.get(user=self.room.host)['points_sum']
+        except Round.DoesNotExist:
+            host_points = 0
+        try:
+            user_points = final_points.get(user=self.room.user)['points_sum']
+        except Round.DoesNotExist:
+            user_points = 0
+        return host_points, user_points
+
+    def update_players_ranking(self):
+        host_points, user_points = self.count_final_points()
+        start_host_score = self.room.host.score
+        start_user_score = self.room.user.score
+        expected_host_score = (10 ** (start_host_score/400))/((10 ** (start_host_score/400))+(10 ** (start_user_score/400)))
+        expected_user_score = (10 ** (start_user_score/400))/((10 ** (start_user_score/400))+(10 ** (start_host_score/400)))
+        if host_points > user_points:
+            host_score = 1
+            user_score = 0
+        elif user_points > host_points:
+            host_score = 0
+            user_score = 1
+        else:
+            host_score, user_score = 0.5, 0.5
+        self.room.host.score = int(start_host_score + 20 * (host_score - expected_host_score))
+        self.room.user.score = int(start_user_score + 20 * (user_score - expected_user_score))
+        self.room.host.save()
+        self.room.user.save()
+        return self.room.host.score, self.room.user.score
 
 
 class Dice(models.Model):
@@ -70,25 +102,28 @@ class Round(models.Model):
         self.dice4.save()
         self.dice5.save()
 
-    def count_points(self):
-        if self.figure in Figures.UPPER_FIGURES:
-            return self.dices.count(self.figure) * self.figure
-        elif self.figure == Figures.TRIO:
+    def count_points(self, figure=None):
+        if figure is None:
+            figure = self.figure
+        if figure in Figures.UPPER_FIGURES:
+            return self.dices.count(figure) * figure
+        elif figure == Figures.TRIO:
             for i in range(1, 7):
                 if self.dices.count(i) >= 3:
                     return sum(self.dices)
             return 0
-        elif self.figure == Figures.QUATRO:
+        elif figure == Figures.QUATRO:
             for i in range(1, 7):
                 if self.dices.count(i) >= 4:
                     return sum(self.dices)
-        elif self.figure == Figures.FULL_HOUSE:
+            return 0
+        elif figure == Figures.FULL_HOUSE:
             for i in range(1, 7):
                 for j in range(1, 7):
                     if self.dices.count(i) == 3 and self.dices.count(j) == 2:
                         return 25
             return 0
-        elif self.figure == Figures.SMALL_STRAIGHT:
+        elif figure == Figures.SMALL_STRAIGHT:
             for i in range(1, 4):
                 for x in range(i, i + 4):
                     if x not in self.dices:
@@ -96,7 +131,7 @@ class Round(models.Model):
                 else:
                     return 30
             return 0
-        elif self.figure == Figures.LARGE_STRAIGHT:
+        elif figure == Figures.LARGE_STRAIGHT:
             for i in range(1, 3):
                 for x in range(i, i + 5):
                     if x not in self.dices:
@@ -104,11 +139,11 @@ class Round(models.Model):
                 else:
                     return 40
             return 0
-        elif self.figure == Figures.YATZY:
+        elif figure == Figures.YATZY:
             if self.dices.count(self.dice1.value) == 5:
                 return 50
             return 0
-        elif self.figure == Figures.CHANCE:
+        elif figure == Figures.CHANCE:
             return sum(self.dices)
         raise Exception('niepoprawna figura')
 

@@ -17,11 +17,11 @@ class Figures:
     SIX = 6
     TRIO = 7
     QUATRO = 8
-    FULL_HOUSE = 25
-    SMALL_STRAIGHT = 30
-    LARGE_STRAIGHT = 40
-    YATZY = 50
-    CHANCE = 100
+    FULL_HOUSE = 9
+    SMALL_STRAIGHT = 10
+    LARGE_STRAIGHT = 11
+    YATZY = 12
+    CHANCE = 13
 
     Choices = (
         (ONE, '1'),
