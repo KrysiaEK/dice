@@ -6,7 +6,7 @@ from rest_framework.authtoken.models import Token
 from dice.apps.games.utilities import Figures
 from dice.apps.users.factories import UserFactory
 from dice.apps.games.factories import RoomFactory, RoundFactory, GameFactory
-from dice.apps.games.models import Room
+from dice.apps.games.models import Room, Round
 
 
 class RoomTestCase(APITestCase):
@@ -29,6 +29,29 @@ class RoomTestCase(APITestCase):
         host_id = response.json().get('host')
         self.assertEqual(host_id, self.user.id)
 
+    def test_create_room_user_in_two_rooms(self):
+        room = RoomFactory()
+        room.host = self.user
+        room.save()
+        rooms_before = Room.objects.count()
+        response = self.client.post('/api/v1/rooms/')
+        rooms_after = Room.objects.count()
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(rooms_after, rooms_before)
+
+    def test_create_room_user_in_two_rooms_one_inactive(self):
+        room = RoomFactory()
+        room.host = self.user
+        room.active = False
+        room.save()
+        rooms_before = Room.objects.count()
+        response = self.client.post('/api/v1/rooms/')
+        rooms_after = Room.objects.count()
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(rooms_after, rooms_before + 1)
+        host_id = response.json().get('host')
+        self.assertEqual(host_id, self.user.id)
+
     def test_join_room(self):
         response = self.client.put(
             f'/api/v1/rooms/{self.room.id}/join/',
@@ -38,8 +61,6 @@ class RoomTestCase(APITestCase):
         self.room.refresh_from_db()
         user_id = self.room.user.id
         self.assertEqual(user_id, self.user.id)
-        data = response.json()
-        self.assertTrue(data.get('game_id'))
 
     def test_join_room_user_exists(self):
         user = UserFactory()
@@ -50,6 +71,34 @@ class RoomTestCase(APITestCase):
             format='json',
         )
         self.assertEqual(response.status_code, 403)
+
+    def test_leave_room_by_user(self):
+        #self.room.refresh_from_db() # dlaczego tutaj to nie jest potrzebne?
+        self.room.user = self.user
+        self.room.save()
+        response = self.client.post(
+            f'/api/v1/rooms/{self.room.id}/leave/',
+            format='json',
+        )
+        self.assertEqual(response.status_code, 200)
+        self.room.refresh_from_db()
+        self.assertEqual(None, self.room.user)
+
+    def test_leave_room_by_host(self):
+        self.room.refresh_from_db() # dlaczego to jest tu potrzebne?
+        print(self.room.host, self.room.user, self.user)
+        self.room.host = self.user
+        self.room.save()
+        print(self.room.host, self.user)
+        response = self.client.post(
+            f'/api/v1/rooms/{self.room.id}/leave/',
+            format='json',
+        )
+        print(response.json())
+        self.assertEqual(response.status_code, 200)
+        self.room.refresh_from_db()
+        self.assertEqual(None, self.room.host)
+        self.assertEqual(False, self.room.active)
 
     def test_get_game_status(self):
         response = self.client.get(
@@ -69,8 +118,6 @@ class RoomTestCase(APITestCase):
             format='json',
         )
         self.assertEqual(response.status_code, 200)
-        data = response.json()
-        self.assertIsNotNone(data.get('game'))
 
 
 class GameTestCase(APITestCase):
@@ -137,7 +184,7 @@ class GameTestCase(APITestCase):
     def test_get_one_round_queryset(self):
         RoundFactory(game=self.game, user=self.host, figure=Figures.FULL_HOUSE, points=25)
         response = self.client_host.get(
-            f'/api/v1/games/{self.game.id}/get_rounds_queryset/',
+            f'/api/v1/games/{self.game.id}/rounds/',
             format='json',
         )
         self.assertEqual(response.status_code, 200)
@@ -146,7 +193,7 @@ class GameTestCase(APITestCase):
         RoundFactory(game=self.game, user=self.host, figure=Figures.FULL_HOUSE, points=25)
         RoundFactory(game=self.game, user=self.user, figure=Figures.SMALL_STRAIGHT, points=30)
         response = self.client_host.get(
-            f'/api/v1/games/{self.game.id}/get_rounds_queryset/',
+            f'/api/v1/games/{self.game.id}/rounds/',
             format='json',
         )
         self.assertEqual(response.status_code, 200)
@@ -157,7 +204,7 @@ class GameTestCase(APITestCase):
         RoundFactory(game=self.game, user=self.host, figure=Figures.FULL_HOUSE, points=0)
         RoundFactory(game=game2, user=game2.room.host, figure=Figures.SMALL_STRAIGHT, points=30)
         response = self.client_host.get(
-            f'/api/v1/games/{self.game.id}/get_rounds_queryset/',
+            f'/api/v1/games/{self.game.id}/rounds/',
             format='json',
         )
         self.assertEqual(response.status_code, 200)
@@ -281,6 +328,7 @@ class RoundTestCase(APITestCase):
 
     def test_figure_choice(self):
         self.game_round.set_dices(4, 4, 4, 3, 3)
+        rounds_before = Round.objects.count()
         response = self.client_host.patch(
             f'/api/v1/rounds/{self.game_round.id}/figure_choice/',
             data={
@@ -289,6 +337,8 @@ class RoundTestCase(APITestCase):
             format='json',
         )
         self.assertEqual(response.status_code, 200)
+        rounds_after = Round.objects.count()
+        self.assertEqual(rounds_after, rounds_before + 1)
         self.assertEqual(response.json().get('points'), 25)
 
     def test_figure_choice_already_chosen(self):

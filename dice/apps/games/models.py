@@ -8,9 +8,12 @@ from django.db.models import Sum, F
 
 
 class Room(models.Model):
-    host = models.ForeignKey('users.User', on_delete=models.CASCADE, related_name="room_host")
+    host = models.ForeignKey('users.User', on_delete=models.CASCADE, blank=True, null=True, related_name="room_host")
     user = models.ForeignKey('users.User', on_delete=models.SET_NULL, blank=True, null=True,
                              related_name="second_player")
+    active = models.BooleanField(default=True)
+    #start_game = czas w którym pierwszy gracz klinkął start
+    #who_started_game = czy gracz czy host
 
 
 class Game(models.Model):

@@ -13,11 +13,13 @@ class GameSerializer(serializers.ModelSerializer):
 
 
 class RoomSerializer(serializers.ModelSerializer):
-    game = GameSerializer(read_only=True)
+    host_name = serializers.ReadOnlyField(source='host.username')
+    user_name = serializers.ReadOnlyField(source='user.username')
+    game_id = serializers.ReadOnlyField(source='game.id')
 
     class Meta:
         model = Room
-        fields = ['id', 'host', 'user', 'game']
+        fields = ['id', 'host', 'host_name', 'user', 'user_name', 'game_id']
 
 
 class DiceSerializer(serializers.ModelSerializer):
