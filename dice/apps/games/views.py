@@ -6,6 +6,8 @@ from .serializers import RoomSerializer, RoundSerializer, GameSerializer
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
 from .decorators import user_is_authenticated, user_in_room, game_not_exists
+from datetime import timedelta
+from django.utils import timezone
 
 from .utilities import Figures
 
@@ -15,8 +17,10 @@ class RoomViewSet(viewsets.mixins.CreateModelMixin, viewsets.mixins.RetrieveMode
     serializer_class = RoomSerializer
 
     def list(self, request, *args, **kwargs):
+        room = self.get_object()
+        time_of_expire = room.time_of_creation + timedelta(hours=10) #jak to wytestować
         queryset = self.filter_queryset(Room.objects.filter(
-            active=True))  # dodać kolejny filtr patrzący czy dany room nie nie był utworzony więcej niż ponad 1h temu
+            active=True, time_of_creation__lt=time_of_expire))  # dodać kolejny filtr patrzący czy dany room nie nie był utworzony więcej niż ponad 24h temu
 
         page = self.paginate_queryset(queryset)
         if page is not None:
@@ -73,21 +77,21 @@ class RoomViewSet(viewsets.mixins.CreateModelMixin, viewsets.mixins.RetrieveMode
         room.save()
         return Response({'status': 'you left the room'})
 
-    # dodać w modelu pole kiedy założono room i po 1h room dostaje status nieaktywny (
-
     @user_in_room
     @game_not_exists
     @action(detail=True, methods=['POST'])
     def start(self, request, **kwargs):
         room = self.get_object()
-        if room.user != request.user and room.host != request.user:
-            return Response(status=HTTP_403_FORBIDDEN)
-        # ustaw czas kiedy pierwszy kliknął
-        # ustaw kto kliknął start
-        # spr czy drugi gracz klinknął już start w ciągu ostatnich 10 sek i zacznij grę (porównać z game_start)
+        if room.start_game is None or room.start_game + timedelta(seconds=10) < timezone.now():
+            room.start_game = timezone.now()
+            room.who_started_game = request.user
+            room.save()
+            return Response({'status': 'waiting for second user'})
+        if room.who_started_game == request.user:
+            return Response({'status': 'waiting for second user'})
         game = Game.objects.create(room=room)
         game.save()
-        # a jak nie spełni się warunek to:
+        return Response(data={'game_id': game.id}, status=HTTP_201_CREATED)
 
 
 class GameViewSet(viewsets.ReadOnlyModelViewSet):
@@ -180,9 +184,6 @@ class RoundViewSet(viewsets.mixins.CreateModelMixin, viewsets.mixins.RetrieveMod
         for choice in Figures.Choices:
             possible_points.append(game_round.count_points(choice[0]))
         return Response(data={'possible_points': possible_points})
-
-
-# gra się nie zaczyna od razu jak ktoś wchodzi do room
 
 # zrobić sprawdzanie kiedy ktoś zrobił ostatnio ruch jeśli nie robi przez minutę to druga osoba wygrywa
 # *odświerzanie room --> spr czy ktoś tam jest, jeśli nie to usuwa: DJANGO PERIODIC TASK

@@ -1,10 +1,8 @@
 import random
-
 from django.db import models
-
 from dice.apps.games.utilities import Figures
-
 from django.db.models import Sum, F
+from django.utils import timezone
 
 
 class Room(models.Model):
@@ -12,8 +10,9 @@ class Room(models.Model):
     user = models.ForeignKey('users.User', on_delete=models.SET_NULL, blank=True, null=True,
                              related_name="second_player")
     active = models.BooleanField(default=True)
-    #start_game = czas w którym pierwszy gracz klinkął start
-    #who_started_game = czy gracz czy host
+    time_of_creation = models.DateTimeField(default=timezone.now())
+    start_game = models.DateTimeField(null=True, blank=True)
+    who_started_game = models.ForeignKey('users.User', on_delete=models.SET_NULL, blank=True, null=True)
 
 
 class Game(models.Model):
@@ -35,8 +34,10 @@ class Game(models.Model):
         host_points, user_points = self.count_final_points()
         start_host_score = self.room.host.score
         start_user_score = self.room.user.score
-        expected_host_score = (10 ** (start_host_score/400))/((10 ** (start_host_score/400))+(10 ** (start_user_score/400)))
-        expected_user_score = (10 ** (start_user_score/400))/((10 ** (start_user_score/400))+(10 ** (start_host_score/400)))
+        expected_host_score = (10 ** (start_host_score / 400)) / (
+                    (10 ** (start_host_score / 400)) + (10 ** (start_user_score / 400)))
+        expected_user_score = (10 ** (start_user_score / 400)) / (
+                    (10 ** (start_user_score / 400)) + (10 ** (start_host_score / 400)))
         if host_points > user_points:
             host_score = 1
             user_score = 0

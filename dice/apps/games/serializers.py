@@ -19,7 +19,7 @@ class RoomSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Room
-        fields = ['id', 'host', 'host_name', 'user', 'user_name', 'game_id']
+        fields = ['id', 'host', 'host_name', 'user', 'user_name', 'game_id', 'time_of_creation']
 
 
 class DiceSerializer(serializers.ModelSerializer):

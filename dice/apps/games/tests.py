@@ -7,18 +7,23 @@ from dice.apps.games.utilities import Figures
 from dice.apps.users.factories import UserFactory
 from dice.apps.games.factories import RoomFactory, RoundFactory, GameFactory
 from dice.apps.games.models import Room, Round
+from datetime import timedelta, datetime
+from django.utils import timezone
 
 
 class RoomTestCase(APITestCase):
     @classmethod
-    def setUpClass(cls):
+    def setUpClass(cls): # skonsultowac z lukaszem jak poprawnie setupowac testy, to chyba w setUp powinno byc
         super().setUpClass()
         cls.user = UserFactory()
         cls.room = RoomFactory(user=None)
 
     def setUp(self):
         self.token = Token.objects.create(user=self.user)
+        self.token_host = Token.objects.create(user=self.room.host)
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.token.key)
+        self.client_host = self.client_class()
+        self.client_host.credentials(HTTP_AUTHORIZATION='Token ' + self.token_host.key)
 
     def test_create_room(self):
         rooms_before = Room.objects.count()
@@ -52,6 +57,21 @@ class RoomTestCase(APITestCase):
         host_id = response.json().get('host')
         self.assertEqual(host_id, self.user.id)
 
+    """
+    def test_list_rooms(self):
+        response = self.client_host.get('/api/v1/rooms/list/')
+        self.assertEqual(response.status_code, 200)
+        room = RoomFactory()
+        room2 = RoomFactory()
+        room.time_of_creation = timezone.now() + timedelta(hours=17)
+        room.save()
+        room2.time_of_creation = timezone.now()
+        room2.save()
+        response = self.client_host.get('/api/list')
+        self.assertEqual(response.status_code, 200)
+        print(response.json())
+    """
+
     def test_join_room(self):
         response = self.client.put(
             f'/api/v1/rooms/{self.room.id}/join/',
@@ -84,13 +104,9 @@ class RoomTestCase(APITestCase):
         self.room.refresh_from_db()
         self.assertEqual(None, self.room.user)
 
+    """"
     def test_leave_room_by_host(self):
-        self.room.refresh_from_db() # dlaczego to jest tu potrzebne?
-        print(self.room.host, self.room.user, self.user)
-        self.room.host = self.user
-        self.room.save()
-        print(self.room.host, self.user)
-        response = self.client.post(
+        response = self.client_host.post(
             f'/api/v1/rooms/{self.room.id}/leave/',
             format='json',
         )
@@ -99,17 +115,65 @@ class RoomTestCase(APITestCase):
         self.room.refresh_from_db()
         self.assertEqual(None, self.room.host)
         self.assertEqual(False, self.room.active)
+    """
 
-    def test_get_game_status(self):
+    def test_start_game(self):
         response = self.client.get(
             f'/api/v1/rooms/{self.room.id}/',
             format='json',
         )
         self.assertEqual(response.status_code, 200)
         data = response.json()
-        self.assertIsNone(data.get('game'))
+        self.assertIsNone(data.get('game_id'))
         response = self.client.put(
             f'/api/v1/rooms/{self.room.id}/join/',
+            format='json',
+        )
+        self.assertIsNone(data.get('game_id'))
+        response = self.client.post(
+            f'/api/v1/rooms/{self.room.id}/start/',
+            format='json',
+        )
+        self.assertEqual(response.status_code, 200)
+        response = self.client_host.post(
+            f'/api/v1/rooms/{self.room.id}/start/',
+            format='json',
+        )
+        self.assertEqual(response.status_code, 201)
+        data = response.json()
+        self.assertIsNotNone(data.get('game_id'))
+        response = self.client.get(
+            f'/api/v1/rooms/{self.room.id}/',
+            format='json',
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertIsNotNone(data.get('game_id'))
+
+    def test_start_game_after_10_sec(self):
+        response = self.client.get(
+            f'/api/v1/rooms/{self.room.id}/',
+            format='json',
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertIsNone(data.get('game_id'))
+        response = self.client.put(
+            f'/api/v1/rooms/{self.room.id}/join/',
+            format='json',
+        )
+        self.assertIsNone(data.get('game_id'))
+        self.assertIsNone(data.get('game_id'))
+        response = self.client.post(
+            f'/api/v1/rooms/{self.room.id}/start/',
+            format='json',
+        )
+        self.assertEqual(response.status_code, 200)
+        self.room.refresh_from_db()
+        self.room.start_game = self.room.start_game - timedelta(seconds=11)
+        self.room.save()
+        response = self.client_host.post(
+            f'/api/v1/rooms/{self.room.id}/start/',
             format='json',
         )
         self.assertEqual(response.status_code, 200)
@@ -118,6 +182,8 @@ class RoomTestCase(APITestCase):
             format='json',
         )
         self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertIsNone(data.get('game_id'))
 
 
 class GameTestCase(APITestCase):
@@ -446,6 +512,16 @@ class RoundTestCase(APITestCase):
         )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json().get('points'), 40)
+
+    '''
+    def test_update_ranking(self):
+        
+        for choice in Figures.Choices:
+
+            for figure_value, figure_name in Figures.Choices:
+                RoundFactory(game=self.game, user=self.user, figure=figure_value)
+                RoundFactory(game=self.game, user=self.host, figure=figure_value)
+    '''
 
     def test_delete_round(self):
         response = self.client_user.delete(
