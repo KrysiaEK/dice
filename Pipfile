@@ -4,15 +4,14 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-django="*"
-django-rest-framework="*"
-psycopg2-binary="*"
-environ = "*"
-factory-boy="*"
-django-cors-headers="*"
+django = "~=3.2"
+django-rest-framework = "~=0.1.0"
+psycopg2-binary = "~=2.9"
+environ = "~=1.0"
+django-cors-headers = "~=3.11"
 
 [dev-packages]
-#factory boy powino być tutaj i wedy powinnam zrobić pipenv install --dev
+factory-boy = "~=3.2"
 
 [requires]
-python_version = "3.8"
+python_version = "3.10"
