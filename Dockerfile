@@ -1,7 +1,7 @@
-FROM python:3.8.5
+FROM python:3.10-slim as base_stage
 
-ENV PYTHONDONTWRITEBYTECODE 1
-ENV PYTHONUNBUFFERED 1
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
 
 WORKDIR /code
 
@@ -13,5 +13,8 @@ COPY . ./
 
 EXPOSE 8000
 
-CMD [ "python", "./manage.py runserver 0.0.0.0:8000" ]
+COPY start-local.sh /start.sh
+RUN chmod +x /start.sh
+CMD ["/start.sh"]
+
 
