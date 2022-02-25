@@ -13,7 +13,9 @@ goal is to score as many points as possible.
 - PostgreSQL
 - Docker
 
-### Installation instruction
+### Developing locally
+
+```TODO: dodać pobieranie z dockera```
 
 
 
