@@ -4,16 +4,15 @@ from rest_framework.test import APITestCase
 from rest_framework.authtoken.models import Token
 
 from dice.apps.games.utilities import Figures
-from dice.apps.users.factories import UserFactory
-from dice.apps.games.factories import RoomFactory, RoundFactory, GameFactory
+from dice.apps.users.tests.factories import UserFactory
+from dice.apps.games.tests.factories import RoomFactory, RoundFactory, GameFactory
 from dice.apps.games.models import Room, Round
-from datetime import timedelta, datetime
-from django.utils import timezone
+from datetime import timedelta
 
 
 class RoomTestCase(APITestCase):
     @classmethod
-    def setUpClass(cls): # skonsultowac z lukaszem jak poprawnie setupowac testy, to chyba w setUp powinno byc
+    def setUpTestData(cls):
         super().setUpClass()
         cls.user = UserFactory()
         cls.room = RoomFactory(user=None)
@@ -316,70 +315,7 @@ class RoundTestCase(APITestCase):
             self.game_round.refresh_from_db()
             self.assertEqual(status_code, response.status_code)
 
-    def test_create_first_round_by_host(self):
-        room = RoomFactory(user=self.user, host=self.host)
-        game = GameFactory(room=room)
-        response = self.client_host.post(
-            f'/api/v1/rounds/',
-            data={
-                'game': game.id,
-            },
-            format='json',
-        )
-        self.assertEqual(response.status_code, 201)
-        data = response.json()
-        self.assertTrue(data.get('dice1').get('value') < 7)
-        self.assertTrue(data.get('dice2').get('value') < 7)
-        self.assertTrue(data.get('dice3').get('value') < 7)
-        self.assertTrue(data.get('dice4').get('value') < 7)
-        self.assertTrue(data.get('dice5').get('value') < 7)
 
-    def test_create_first_round_by_user(self):
-        room = RoomFactory(user=self.user, host=self.host)
-        game = GameFactory(room=room)
-        response = self.client_user.post(
-            f'/api/v1/rounds/',
-            data={
-                'game': game.id,
-            },
-            format='json',
-        )
-        self.assertEqual(response.status_code, 403)
-
-    def test_create_next_round(self):  # host chce założyć round zanim skończył poprzednią
-        response = self.client_host.post(
-            f'/api/v1/rounds/',
-            data={
-                'game': self.game.id,
-            },
-            format='json',
-        )
-        self.assertEqual(response.status_code, 403)
-
-    def test_create_second_round(self):  # user chce założyć grę, jak już się skończyła runda hosta
-        self.game_round.figure = Figures.LARGE_STRAIGHT
-        self.game_round.save()
-        response = self.client_user.post(
-            f'/api/v1/rounds/',
-            data={
-                'game': self.game.id,
-            },
-            format='json',
-        )
-        self.assertEqual(response.status_code, 201)
-
-    def test_create_third_round(self):
-        self.game_round.figure = Figures.LARGE_STRAIGHT
-        self.game_round.save()
-        RoundFactory(game=self.game, user=self.user, figure=Figures.FIVE)
-        response = self.client_host.post(
-            f'/api/v1/rounds/',
-            data={
-                'game': self.game.id,
-            },
-            format='json',
-        )
-        self.assertEqual(response.status_code, 201)
 
     def test_invalid_roll_again(self):
         game_round2 = RoundFactory()

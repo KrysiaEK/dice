@@ -12,6 +12,7 @@ class UserViewSet(viewsets.mixins.CreateModelMixin, viewsets.GenericViewSet):
 
 
 class CustomObtainAuthToken(ObtainAuthToken):
+    
     def post(self, request, *args, **kwargs):
         response = super(CustomObtainAuthToken, self).post(request, *args, **kwargs)
         token = Token.objects.get(key=response.data['token'])

@@ -61,7 +61,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'dice.urls'
+ROOT_URLCONF = 'dice.config.urls'
 
 TEMPLATES = [
     {
