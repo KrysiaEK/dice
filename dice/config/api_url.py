@@ -1,7 +1,8 @@
 from rest_framework import routers
 
 from dice.apps.users.views import UserViewSet
-from dice.apps.games.views import RoomViewSet, RoundViewSet, GameViewSet
+from dice.apps.games.views import RoomViewSet, GameViewSet
+from dice.apps.rounds.views import RoundViewSet
 
 
 router = routers.DefaultRouter()

@@ -43,10 +43,11 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework.authtoken',
 
+    'corsheaders',
+
     'dice.apps.users',
     'dice.apps.games',
-
-    "corsheaders",
+    'dice.apps.rounds'
 ]
 
 MIDDLEWARE = [

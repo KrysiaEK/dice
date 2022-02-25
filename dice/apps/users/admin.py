@@ -1,5 +1,6 @@
 from django.contrib import admin
-from .models import User
+
+from dice.apps.users.models import User
 
 
 @admin.register(User)
