@@ -15,7 +15,7 @@ goal is to score as many points as possible.
 
 ### Developing locally
 
-```TODO: dodać pobieranie z dockera```
+```TODO90(KrysiaEK): dodać pobieranie z dockera```
 
 
 
