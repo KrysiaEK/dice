@@ -1,2 +1,2 @@
-# todo: test roll_dices
+# todo(KrysiaEK): test roll_dices
 

@@ -23,7 +23,7 @@ class RoundTestCase(APITestCase):
         self.client_user = self.client_class()
         self.client_user.credentials(HTTP_AUTHORIZATION='Token ' + self.token_user.key)
 
-    # todo: 6 testów testujących walidację create round
+    # todo(KrysiaEK): 6 testów testujących walidację create round
 
     def test_roll(self):
         response = self.client_host.patch(

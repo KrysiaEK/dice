@@ -4,11 +4,11 @@ from dice.apps.rounds.utilities import Figures
 from dice.apps.rounds.tests.factories import RoundFactory
 
 
-# todo: Dice Tests:
+# todo(KrysiaEK): Dice Tests:
 #  1. create
 #  2. reroll
 
-# todo: Round Test:
+# todo(KrysiaEK): Round Test:
 #  1. count_extra_points_yatzy
 #  2. count_extra_points_63
 #  3. count_extra_points
