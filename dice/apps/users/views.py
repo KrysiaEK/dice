@@ -1,9 +1,10 @@
 from rest_framework import viewsets
-from .models import User
-from .serializers import UserSerializer
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.authtoken.models import Token
 from rest_framework.response import Response
+
+from dice.apps.users.models import User
+from dice.apps.users.serializers import UserSerializer
 
 
 class UserViewSet(viewsets.mixins.CreateModelMixin, viewsets.GenericViewSet):
@@ -12,6 +13,7 @@ class UserViewSet(viewsets.mixins.CreateModelMixin, viewsets.GenericViewSet):
 
 
 class CustomObtainAuthToken(ObtainAuthToken):
+
     def post(self, request, *args, **kwargs):
         response = super(CustomObtainAuthToken, self).post(request, *args, **kwargs)
         token = Token.objects.get(key=response.data['token'])

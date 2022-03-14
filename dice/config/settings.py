@@ -43,10 +43,11 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework.authtoken',
 
+    'corsheaders',
+
     'dice.apps.users',
     'dice.apps.games',
-
-    "corsheaders",
+    'dice.apps.rounds'
 ]
 
 MIDDLEWARE = [
@@ -61,7 +62,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'dice.urls'
+ROOT_URLCONF = 'dice.config.urls'
 
 TEMPLATES = [
     {

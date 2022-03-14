@@ -15,7 +15,6 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-from rest_framework.authtoken.views import obtain_auth_token
 
 from dice.apps.users.views import CustomObtainAuthToken
 
@@ -23,5 +22,5 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('api-auth/', include('rest_framework.urls')),
     path('api-token-auth/', CustomObtainAuthToken.as_view()),
-    path('api/v1/', include('dice.api_url')),
+    path('api/v1/', include('dice.config.api_url')),
     ]

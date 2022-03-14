@@ -2,7 +2,8 @@ from rest_framework.exceptions import PermissionDenied
 from rest_framework.status import HTTP_403_FORBIDDEN, HTTP_400_BAD_REQUEST
 from rest_framework.response import Response
 from functools import wraps
-from .models import Room
+
+from dice.apps.games.models import Room
 
 
 def user_is_authenticated(view_function):
