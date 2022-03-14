@@ -1,6 +1,5 @@
 import factory.fuzzy
 from dice.apps.rounds.models import Round, Dice
-from dice.apps.games.tests.factories import GameFactory
 
 
 class DiceFactory(factory.django.DjangoModelFactory):
@@ -11,7 +10,7 @@ class DiceFactory(factory.django.DjangoModelFactory):
 
 
 class RoundFactory(factory.django.DjangoModelFactory):
-    game = factory.SubFactory(GameFactory)
+    game = factory.SubFactory('dice.apps.games.tests.factories.GameFactory')
     user = factory.SelfAttribute('game.room.host')
 
     class Meta:

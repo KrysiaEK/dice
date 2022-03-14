@@ -10,7 +10,6 @@ from dice.apps.games.models import Room
 class RoomTestCase(APITestCase):
     @classmethod
     def setUpTestData(cls):
-        super().setUpClass()
         cls.user = UserFactory()
         cls.room = RoomFactory(user=None)
 
