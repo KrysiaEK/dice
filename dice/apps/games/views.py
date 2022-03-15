@@ -4,12 +4,11 @@ from rest_framework.response import Response
 from rest_framework.decorators import action
 from datetime import timedelta
 from django.utils import timezone
-from rest_framework.decorators import permission_classes
 
 from dice.apps.games.models import Room, Game
 from dice.apps.games.serializers import RoomSerializer, GameSerializer
 from dice.apps.rounds.serializers import RoundSerializer
-from dice.apps.games.permissions import InRoomPermission
+from dice.apps.games.permissions import InRoomPermission, GameNotExists
 
 
 class RoomViewSet(viewsets.mixins.CreateModelMixin, viewsets.mixins.RetrieveModelMixin, viewsets.GenericViewSet):
@@ -56,12 +55,9 @@ class RoomViewSet(viewsets.mixins.CreateModelMixin, viewsets.mixins.RetrieveMode
         room.save()
         return Response({'status': 'joined the room'})
 
-    @permission_classes([InRoomPermission])
-    @action(detail=True, methods=['POST'])
+    @action(detail=True, methods=['POST'], permission_classes=[InRoomPermission, GameNotExists])
     def leave(self, request, **kwargs):
         room = self.get_object()
-        if room.game is not None:
-            return Response(status=HTTP_403_FORBIDDEN)
         if self.request.user == room.host:
             if room.user:
                 room.host = room.user
@@ -74,12 +70,11 @@ class RoomViewSet(viewsets.mixins.CreateModelMixin, viewsets.mixins.RetrieveMode
         room.save()
         return Response({'status': 'you left the room'})
 
-    @permission_classes([InRoomPermission])
-    @action(detail=True, methods=['POST'])
+    @action(detail=True, methods=['POST'], permission_classes=[InRoomPermission, GameNotExists])
     def start(self, request, **kwargs):
         room = self.get_object()
-        if room.game is not None:
-            return Response(status=HTTP_403_FORBIDDEN)
+        if room.host is None or room.user is None:
+            return Response({'status': 'waiting for second user'})
         if room.start_game is None or room.start_game + timedelta(seconds=10) < timezone.now():
             room.start_game = timezone.now()
             room.who_started_game = request.user

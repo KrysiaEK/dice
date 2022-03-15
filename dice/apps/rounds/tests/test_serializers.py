@@ -9,7 +9,6 @@ from dice.apps.rounds.tests.factories import RoundFactory
 class RoundTestCase(APITestCase):
     @classmethod
     def setUpTestData(cls):
-        super().setUpClass()
         cls.game_round = RoundFactory()
         cls.game = cls.game_round.game
         cls.host = cls.game.room.host

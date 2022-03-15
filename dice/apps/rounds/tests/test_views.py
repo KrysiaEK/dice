@@ -9,7 +9,6 @@ from dice.apps.rounds.models import Round
 class RoundTestCase(APITestCase):
     @classmethod
     def setUpTestData(cls):
-        super().setUpClass()
         cls.game_round = RoundFactory()
         cls.game = cls.game_round.game
         cls.host = cls.game.room.host
@@ -48,7 +47,7 @@ class RoundTestCase(APITestCase):
             self.assertEqual(status_code, response.status_code)
 
     def test_invalid_roll_again(self):
-        # todo: sprawdzic czy właśwciwy status
+        # todo(KrysiaEK): sprawdzic czy właśwciwy status
         game_round2 = RoundFactory()
         response = self.client_host.patch(
             f'/api/v1/rounds/{self.game_round.id}/reroll/',
@@ -126,9 +125,9 @@ class RoundTestCase(APITestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json().get('extra_points'), 50)
 
-    #todo:
-    # 1. test gdy ktoś chce wybrać figurę gdy nie jego kolej
-    # 2. test gdy figura którą ktoś chce wybrać jest już zajęta
+    # todo(KrysiaEK):
+    #  1. test gdy ktoś chce wybrać figurę gdy nie jego kolej
+    #  2. test gdy figura którą ktoś chce wybrać jest już zajęta
 
     def test_figure_choice_with_extra_points_yatzy_wrong(self):
         self.game_round.set_dices(4, 4, 4, 4, 4)
@@ -209,5 +208,3 @@ class RoundTestCase(APITestCase):
         )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json().get('possible_points'), [0, 0, 3, 4, 10, 6, 0, 0, 0, 30, 0, 0, 23])
-
-
