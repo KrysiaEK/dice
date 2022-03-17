@@ -3,6 +3,5 @@
 !apps/*
 !config/*
 !manage.py
-Pipfile
-Pipfile.lock
-README.md
+!Pipfile
+!Pipfile.lock

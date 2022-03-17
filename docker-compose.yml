@@ -5,15 +5,14 @@ services:
     image: postgres
     volumes:
       - ./data/db:/var/lib/postgresql/data
-    env_file: docker.env
+    env_file: [docker.env, ]
 
   web:
     build: .
-    command: python manage.py runserver 0.0.0.0:8000
     volumes:
       - .:/code
     ports:
       - "8000:8000"
-    env_file: docker.env
+    env_file: [docker.env, ]
     depends_on:
       - db
