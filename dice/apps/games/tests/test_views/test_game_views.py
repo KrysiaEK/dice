@@ -7,6 +7,8 @@ from dice.apps.rounds.tests.factories import RoundFactory
 
 
 class GameTestCase(APITestCase):
+    """Tests for games' views."""
+
     @classmethod
     def setUpTestData(cls):
         cls.game = GameFactory()
@@ -22,14 +24,19 @@ class GameTestCase(APITestCase):
         self.client_user.credentials(HTTP_AUTHORIZATION='Token ' + self.token_user.key)
 
     def test_get_one_round_queryset(self):
+        """Test get one round queryset."""
+
         RoundFactory(game=self.game, user=self.host, figure=Figures.FULL_HOUSE, points=25)
         response = self.client_host.get(
             f'/api/v1/games/{self.game.id}/rounds/',
             format='json',
         )
         self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.json().get('all_rounds')), 1)
 
     def test_get_two_rounds_queryset(self):
+        """Test get two round form the same game queryset."""
+
         RoundFactory(game=self.game, user=self.host, figure=Figures.FULL_HOUSE, points=25)
         RoundFactory(game=self.game, user=self.user, figure=Figures.SMALL_STRAIGHT, points=30)
         response = self.client_host.get(
@@ -40,6 +47,8 @@ class GameTestCase(APITestCase):
         self.assertEqual(len(response.json().get('all_rounds')), 2)
 
     def test_get_rounds_from_two_games_queryset(self):
+        """Test get two rounds queryset from two different games."""
+
         game2 = GameFactory()
         RoundFactory(game=self.game, user=self.host, figure=Figures.FULL_HOUSE, points=0)
         RoundFactory(game=game2, user=game2.room.host, figure=Figures.SMALL_STRAIGHT, points=30)

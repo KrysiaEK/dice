@@ -9,6 +9,8 @@ from dice.apps.rounds.tests.factories import RoundFactory
 
 
 class GameTestCase(APITestCase):
+    """Tests for games models."""
+
     @classmethod
     def setUpTestData(cls):
         cls.game = GameFactory()
@@ -24,6 +26,8 @@ class GameTestCase(APITestCase):
         self.client_user.credentials(HTTP_AUTHORIZATION='Token ' + self.token_user.key)
 
     def test_count_final_points(self):
+        """Test to check counting points."""
+
         RoundFactory(game=self.game, user=self.user, figure=Figures.FIVE, points=15)
         RoundFactory(game=self.game, user=self.user, figure=Figures.LARGE_STRAIGHT, points=40)
         RoundFactory(game=self.game, user=self.host, figure=Figures.FULL_HOUSE, points=25)
@@ -37,6 +41,8 @@ class GameTestCase(APITestCase):
         self.assertEqual(response.status_code, 200)
 
     def test_count_final_points_with_extra_points(self):
+        """Test to check counting points with extra points (more than one yatzy or 63 points bonus."""
+
         RoundFactory(game=self.game, user=self.user, figure=Figures.FIVE, points=25, extra_points=50)
         RoundFactory(game=self.game, user=self.user, figure=Figures.LARGE_STRAIGHT, points=40)
         RoundFactory(game=self.game, user=self.host, figure=Figures.FULL_HOUSE, points=25)
@@ -50,6 +56,8 @@ class GameTestCase(APITestCase):
         self.assertEqual(response.status_code, 200)
 
     def test_count_final_points_round_is_none(self):
+        """Test to check counting points when game hasn't started yet."""
+
         response = self.client_host.get(
             f'/api/v1/games/{self.game.id}/count_final_points/',
             format='json',
@@ -59,6 +67,8 @@ class GameTestCase(APITestCase):
         self.assertEqual(response.status_code, 200)
 
     def test_count_final_points_round_user_is_none(self):
+        """Test to check counting points after one round, when user has no points yet."""
+
         RoundFactory(game=self.game, user=self.host, figure=Figures.FULL_HOUSE, points=25)
         response = self.client_host.get(
             f'/api/v1/games/{self.game.id}/count_final_points/',
@@ -76,6 +86,8 @@ class NonAPIGameTestCase(TestCase):
         self.user = self.game.room.user
 
     def test_count_score(self):
+        """Test to check counting players' ranking points."""
+
         RoundFactory(game=self.game, user=self.host, figure=Figures.SIX, points=30)
         self.game.update_players_ranking()
         self.user.refresh_from_db()
@@ -84,6 +96,8 @@ class NonAPIGameTestCase(TestCase):
         self.assertEqual(self.user.score, 1190)
 
     def test_count_score_draw(self):
+        """Test to check counting players' ranking points when they had the same amount of points."""
+
         self.game.update_players_ranking()
         self.user.refresh_from_db()
         self.host.refresh_from_db()

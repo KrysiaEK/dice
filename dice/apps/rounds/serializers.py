@@ -31,6 +31,8 @@ class RoundSerializer(serializers.ModelSerializer):
         fields = ['dice1', 'dice2', 'dice3', 'dice4', 'dice5', 'turn', 'user', 'game', 'points', 'extra_points']
 
     def create(self, validated_data):
+        """Function to create round and roll dices."""
+
         dices = []
         for i in range(5):
             dice = Dice.objects.create(value=random.randint(1, 6))

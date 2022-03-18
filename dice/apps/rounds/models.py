@@ -10,11 +10,15 @@ class Dice(models.Model):
 
     @classmethod
     def create(cls):
+        """Function to create dice."""
+
         dice = cls(value=random.randint(1, 6))
         dice.save()
         return dice
 
     def reroll(self):
+        """Function to roll dice again and set new value."""
+
         self.value = random.randint(1, 6)
         self.save(update_fields=['value'])
 
@@ -47,6 +51,8 @@ class Round(models.Model):
         return [self.dice1.value, self.dice2.value, self.dice3.value, self.dice4.value, self.dice5.value]
 
     def set_dices(self, dice1, dice2, dice3, dice4, dice5):
+        """Function to save dices' values."""
+
         self.dice1.value = dice1
         self.dice2.value = dice2
         self.dice3.value = dice3
@@ -59,6 +65,8 @@ class Round(models.Model):
         self.dice5.save()
 
     def count_points(self, figure=None):
+        """Function to count points for individual figure based on dices' values."""
+
         if figure is None:
             figure = self.figure
         if figure in Figures.UPPER_FIGURES:
@@ -104,9 +112,15 @@ class Round(models.Model):
         raise Exception('Niepoprawna figura')
 
     def count_extra_points(self):
+        """Function to add up extra points gotten by another yatzy and by getting minimum 63 points in upper figures."""
+
         return self.count_extra_points_yatzy() + self.count_extra_points_63()
 
     def count_extra_points_yatzy(self):
+        """Function to add up points gotten by throwing more than one yatzy.
+
+        For every yatzy player gets 50 points."""
+
         super_round = Round.objects.filter(game=self.game, user=self.user, figure=Figures.YATZY, points=50)
         if not super_round.exists():
             return 0
@@ -115,6 +129,10 @@ class Round(models.Model):
         return 50
 
     def count_extra_points_63(self):
+        """Function to check if player have 63 or more points in upper figures (1, 2, 3, 4, 5, 6).
+
+        Player who got at least 63 points gets another 35 points."""
+
         upper_figures = Round.objects.filter(game=self.game, user=self.user,
                                              figure__in=Figures.UPPER_FIGURES).aggregate(sum_points=Sum("points"))
         upper_figures_points = upper_figures['sum_points']
