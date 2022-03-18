@@ -1,11 +1,14 @@
 from rest_framework import permissions
 
-import dice.apps.games.tests.test_views.test_game_views
-
 from dice.apps.games.models import Room
 
 
 class InRoomPermission(permissions.BasePermission):
+    """Permission checking if user is in room.
+
+    If user isn't in room 403 is raised.
+    """
+
     message = 'You are not in this room.'
 
     def has_object_permission(self, request, view, obj):
@@ -13,6 +16,11 @@ class InRoomPermission(permissions.BasePermission):
 
 
 class GameNotExists(permissions.BasePermission):
+    """Permission checking if game already exists.
+
+    If game already started 403 is raised.
+    """
+
     message = 'Game already exists.'
 
     def has_object_permission(self, request, view, obj):
@@ -21,4 +29,3 @@ class GameNotExists(permissions.BasePermission):
                 return False
         except Room.game.RelatedObjectDoesNotExist:
             return True
-
