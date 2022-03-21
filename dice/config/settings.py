@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 """
 
 import os
+
 import environ
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -44,6 +45,8 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
 
     'corsheaders',
+
+    "django_migration_linter",
 
     'dice.apps.users',
     'dice.apps.games',
