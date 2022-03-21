@@ -8,6 +8,8 @@ from dice.apps.users.serializers import UserSerializer
 
 
 class DiceSerializer(serializers.ModelSerializer):
+    """Dice serializer."""
+
     value = serializers.IntegerField(required=False)
 
     class Meta:
@@ -16,6 +18,8 @@ class DiceSerializer(serializers.ModelSerializer):
 
 
 class RoundSerializer(serializers.ModelSerializer):
+    """Round serializer."""
+
     dice1 = DiceSerializer(required=False)
     dice2 = DiceSerializer(required=False)
     dice3 = DiceSerializer(required=False)

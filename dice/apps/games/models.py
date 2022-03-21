@@ -6,6 +6,8 @@ from dice.apps.rounds.models import Round, Dice
 
 
 class Room(models.Model):
+    """Room model."""
+
     host = models.ForeignKey('users.User', on_delete=models.CASCADE, blank=True, null=True, related_name="room_host")
     user = models.ForeignKey('users.User', on_delete=models.SET_NULL, blank=True, null=True,
                              related_name="second_player")
@@ -16,6 +18,8 @@ class Room(models.Model):
 
 
 class Game(models.Model):
+    """Game model."""
+
     room = models.OneToOneField(Room, on_delete=models.CASCADE)
 
     def count_final_points(self):

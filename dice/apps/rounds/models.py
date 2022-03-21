@@ -6,6 +6,8 @@ from dice.apps.rounds.utilities import Figures
 
 
 class Dice(models.Model):
+    """Dice model."""
+
     value = models.PositiveSmallIntegerField()
 
     @classmethod
@@ -24,6 +26,8 @@ class Dice(models.Model):
 
 
 class Round(models.Model):
+    """Round model."""
+
     TURN_CHOICES = (
         (1, 1),
         (2, 2),

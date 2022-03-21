@@ -5,6 +5,8 @@ from dice.apps.users.models import User
 
 
 class UserSerializer(serializers.ModelSerializer):
+    """User serializer."""
+
     score = serializers.IntegerField(read_only=True)
 
     class Meta:
