@@ -10,23 +10,13 @@ from dice.apps.rounds.utilities import Figures
 
 
 class RoundViewSet(viewsets.mixins.CreateModelMixin, viewsets.mixins.RetrieveModelMixin, viewsets.GenericViewSet):
-    """View set to manage rounds."""
+    """Views set of ``Round`` model."""
 
     serializer_class = RoundSerializer
     queryset = Round.objects.all()
 
+    # TODO(KrysiaEK): zrobić z tego permissions
     def extra_validation(self, game):
-        """Validation if next round can be created.
-
-        1. Validation if user is in room.
-        2. Validation if previous round ended.
-        3. Validation if there are more figures and game didn't ended.
-        4. Validation if first round is created for host (host is starting).
-        5. Validation if round is created for the right user.
-
-        If not PermissionDenied is raised.
-        """
-
         if not (game.room.user == self.request.user or game.room.host == self.request.user):
             raise PermissionDenied('Spadaj złodzieju tożsamości')
         if Round.objects.filter(user=self.request.user, figure__isnull=True, game=game).exists():
@@ -41,7 +31,7 @@ class RoundViewSet(viewsets.mixins.CreateModelMixin, viewsets.mixins.RetrieveMod
             raise PermissionDenied('Nie Twoja runda')
 
     def perform_create(self, serializer):
-        """Function to create round with validation."""
+        """Create ``Round`` instance by authenticated user."""
 
         game = serializer.validated_data['game']
         self.extra_validation(game)
@@ -49,12 +39,15 @@ class RoundViewSet(viewsets.mixins.CreateModelMixin, viewsets.mixins.RetrieveMod
 
     @action(detail=True, methods=['PATCH'])
     def reroll(self, request, **kwargs):
-        """Function to set dices' new values.
+        """Update dices' values.
 
-        Player decide which dices he/she wants to roll again and roll them at the most twice.
-        Validation if player rolled dices at most three times (first roll + 2 rerolls).
-        Validation if dices rolls player whose turn is it.
-        Validation if dice is from right round.
+        Following validation is performed to ensure ``Round`` instance
+        will have proper state:
+
+        + dices' values can be changed at most twice
+        + dices are rolled by right player
+        + dice is property of this round
+
         """
 
         game_round = self.get_object()
@@ -77,11 +70,17 @@ class RoundViewSet(viewsets.mixins.CreateModelMixin, viewsets.mixins.RetrieveMod
 
     @action(detail=True, methods=['PATCH'])
     def figure_choice(self, request, **kwargs):
-        """Function to choose figure and save points.
+        """Choose figure and save points.
 
-        New round is created. After last round game ends and players' rankings are updated.
-        Validation if right player (whose turn it is) is making choice.
-        Validation if player don't want to choose figure again.
+        New ``Round`` instance is created. After last round
+        game ends and players' rankings are updated.
+
+        Following validation is performed to ensure ``Round`` instance
+        will have proper state:
+
+        + right player is choosing
+        + choose only unoccupied figures
+
         """
 
         game_round = self.get_object()
@@ -103,8 +102,7 @@ class RoundViewSet(viewsets.mixins.CreateModelMixin, viewsets.mixins.RetrieveMod
 
     @action(detail=True, methods=['GET'])
     def count_possible_points(self, request, **kwargs):
-        """Function to count points for each figure to show player how many points she/he can get with dice
-        configuration he/she has."""
+        """Count possible points for dices' values configuration."""
 
         game_round = self.get_object()
         possible_points = []

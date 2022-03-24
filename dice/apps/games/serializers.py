@@ -4,7 +4,7 @@ from dice.apps.games.models import Room, Game
 
 
 class GameSerializer(serializers.ModelSerializer):
-    """Game serializer."""
+    """Serializer of ``Game`` model instances."""
 
     class Meta:
         model = Game
@@ -12,7 +12,7 @@ class GameSerializer(serializers.ModelSerializer):
 
 
 class RoomSerializer(serializers.ModelSerializer):
-    """Room serializer."""
+    """Serializer of ``Room`` model instances."""
 
     host_name = serializers.ReadOnlyField(source='host.username')
     user_name = serializers.ReadOnlyField(source='user.username')

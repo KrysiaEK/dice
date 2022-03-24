@@ -12,13 +12,13 @@ from dice.apps.rounds.serializers import RoundSerializer
 
 
 class RoomViewSet(viewsets.mixins.CreateModelMixin, viewsets.mixins.RetrieveModelMixin, viewsets.GenericViewSet):
-    """View set to manage rooms."""
+    """Views set of ``Room`` model."""
 
     queryset = Room.objects.all()
     serializer_class = RoomSerializer
 
     def list(self, request, *args, **kwargs):
-        """Function to list all active rooms."""
+        """List all active ``Room`` instances."""
 
         room = self.get_object()
         time_of_expire = room.time_of_creation + timedelta(hours=10)
@@ -35,10 +35,15 @@ class RoomViewSet(viewsets.mixins.CreateModelMixin, viewsets.mixins.RetrieveMode
         serializer.save()
 
     def create(self, request, *args, **kwargs):
-        """Function to create room.
+        """Create ``Room`` instance hosted by authenticated user.
 
-         Validation if player isn't a host or a user in other active room.
-         """
+        Following validation is performed to ensure ``Room`` instance
+        will have proper state:
+
+        + player is not a host of other active room
+        + user(host) is not a member of other active room
+
+        """
 
         data = {
             'host': self.request.user.id,
@@ -56,9 +61,14 @@ class RoomViewSet(viewsets.mixins.CreateModelMixin, viewsets.mixins.RetrieveMode
     @user_is_authenticated
     @action(detail=True, methods=['PUT'])
     def join(self, request, **kwargs):
-        """Function to join room.
+        """Join ``Room`` instance by authenticated user.
 
-        Validation if room isn't full or host don't try join as a user (second player).
+        Following validation is performed to ensure ``Room`` instance
+        will have proper state:
+
+        + room is not full
+        + host don't join again
+
         """
 
         room = self.get_object()
@@ -75,11 +85,18 @@ class RoomViewSet(viewsets.mixins.CreateModelMixin, viewsets.mixins.RetrieveMode
     @user_is_authenticated
     @action(detail=True, methods=['POST'])
     def leave(self, request, **kwargs):
-        """Function to leave room.
+        """Leave ``Room`` instance by authenticated user.
 
-         Validation if user is in room and if game hasn't started yet. If host left room then second player become
-         a host, if there was no second player then room become inactive.
-         """
+        If host left room then second player become a host,
+        if there is no second player then room become inactive.
+
+        Following validation is performed to ensure ``Room`` instance
+        will have proper state:
+
+        + user is member of a room
+        + game is not created
+
+        """
 
         room = self.get_object()
         if self.request.user == room.host:
@@ -98,11 +115,15 @@ class RoomViewSet(viewsets.mixins.CreateModelMixin, viewsets.mixins.RetrieveMode
     @game_not_exists
     @action(detail=True, methods=['POST'])
     def start(self, request, **kwargs):
-        """Function to start and create the game.
+        """Create ``Game`` instance by two authenticated users.
 
-        Validation if user is in room and if game hasn't started yet. Second player have 10 seconds to press start after
-        first player pressed start button otherwise she/he have to wait for second player to be ready. Validation if
-        start button wasn't pressed by the same person twice.
+        Following validation is performed to ensure ``Game`` instance
+        will have proper state:
+
+        + user is member of room
+        + game is not created
+        + one player press start once
+
         """
 
         room = self.get_object()
@@ -119,14 +140,14 @@ class RoomViewSet(viewsets.mixins.CreateModelMixin, viewsets.mixins.RetrieveMode
 
 
 class GameViewSet(viewsets.ReadOnlyModelViewSet):
-    """View set to manage game."""
+    """Views set of ``Game`` model."""
 
     serializer_class = GameSerializer
     queryset = Game.objects.all()
 
     @action(detail=True, methods=['GET'])
     def count_final_points(self, request, **kwargs):
-        """Function to count players' final points in the game."""
+        """Get and count players' final points."""
 
         game = self.get_object()
         host_points, user_points = game.count_final_points()
@@ -134,7 +155,7 @@ class GameViewSet(viewsets.ReadOnlyModelViewSet):
 
     @action(detail=True, methods=['GET'])
     def rounds(self, request, **kwargs):
-        """Function to get all rounds from the game."""
+        """Get all game's ``Round`` instances."""
 
         game = self.get_object()
         rounds_queryset = game.round_set.all().order_by('id')

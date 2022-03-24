@@ -2,7 +2,7 @@ import random
 
 
 def roll_dices():
-    """Function to draw dices"""
+    """Draw dices' values."""
 
     dices = []
     for i in range(5):
@@ -11,7 +11,7 @@ def roll_dices():
 
 
 class Figures:
-    """Figures are configurations of numbers on faces."""
+    """Configurations od dices' values."""
 
     ONE = 1
     TWO = 2
