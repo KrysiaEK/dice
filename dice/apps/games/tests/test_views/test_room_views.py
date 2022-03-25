@@ -21,6 +21,7 @@ class RoomTestCase(APITestCase):
         self.client_host.credentials(HTTP_AUTHORIZATION='Token ' + self.token_host.key)
 
     # todo (KrysiaEK): TEST LIST VIEW?
+
     """
     def test_list_rooms(self):
         response = self.client_host.get('/api/v1/rooms/list/')
@@ -89,8 +90,6 @@ class RoomTestCase(APITestCase):
         )
         self.assertEqual(response.status_code, 403)
 
-    # todo(KrysiaEK): host chce dołączyć jeszcze raz, i 403
-
     def test_leave_room_by_user(self):
         # todo(KrysiaEK): spr czy status 'you left the room'
         # self.room.refresh_from_db() # dlaczego tutaj to nie jest potrzebne?
@@ -124,9 +123,6 @@ class RoomTestCase(APITestCase):
         )
         self.assertEqual(response.status_code, 403)
         self.assertEqual(response.json().get('detail'), 'Game already exists.')
-
-
-    # todo(KrysiaEK): ktoś chce wyjść gdy gra już wystartowała
 
     """"
     def test_leave_room_by_host(self):
