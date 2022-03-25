@@ -1,0 +1,7 @@
+*
+
+!apps/*
+!config/*
+!manage.py
+!Pipfile
+!Pipfile.lock
