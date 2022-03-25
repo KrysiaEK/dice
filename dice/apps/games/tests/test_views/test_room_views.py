@@ -8,7 +8,7 @@ from dice.apps.games.models import Room
 
 
 class RoomTestCase(APITestCase):
-    """Tests for rooms' views."""
+    """Rooms' views tests."""
 
     @classmethod
     def setUpTestData(cls):
@@ -25,10 +25,7 @@ class RoomTestCase(APITestCase):
     # todo(KrysiaEK): test list view?
 
     def test_create_room(self):
-        """Test create room.
-
-        Checking if person who created room is host.
-        """
+        """Ensure room creator is set as room host."""
 
         rooms_before = Room.objects.count()
         response = self.client.post('/api/v1/rooms/')
@@ -39,7 +36,7 @@ class RoomTestCase(APITestCase):
         self.assertEqual(host_id, self.user.id)
 
     def test_create_room_user_in_two_rooms(self):
-        """Test checking if 403 is raised when person who wants to create new room is in other, active room."""
+        """Ensure http 403 is returned when user is in active room."""
 
         room = RoomFactory()
         room.host = self.user
@@ -51,7 +48,7 @@ class RoomTestCase(APITestCase):
         self.assertEqual(rooms_after, rooms_before)
 
     def test_create_room_user_in_two_rooms_one_inactive(self):
-        """Test checking create room when person who wants to create new room is in other, inactive room."""
+        """Ensure room is created when user is in inactive room."""
 
         room = RoomFactory()
         room.host = self.user
@@ -66,7 +63,7 @@ class RoomTestCase(APITestCase):
         self.assertEqual(host_id, self.user.id)
 
     def test_join_room(self):
-        """Test checking joining room."""
+        """Ensure user joined room."""
 
         # todo(KrysiaEK): sprawdzić czy status joined room
         response = self.client.put(
@@ -79,7 +76,7 @@ class RoomTestCase(APITestCase):
         self.assertEqual(user_id, self.user.id)
 
     def test_join_room_user_exists(self):
-        """Test checking if error 403 is raised when room is full and somebody try to join it."""
+        """Ensure http 403 is returned when user try to join full room."""
 
         user = UserFactory()
         self.room.user = user
@@ -93,7 +90,7 @@ class RoomTestCase(APITestCase):
     # todo(KrysiaEK): host chce dołączyć jeszcze raz, i 403
 
     def test_leave_room_by_user(self):
-        """Test checking leaving room by user."""
+        """Ensure user not in room after leaving room."""
 
         # todo(KrysiaEK): spr czy status 'you left the room'
 
@@ -112,10 +109,7 @@ class RoomTestCase(APITestCase):
     # todo(KrysiaEK): host wychodzi, ale nie było usera, room nieaktywny
 
     def test_start_game(self):
-        """Test checking game start.
-
-        Test simulates creating room, joining user to room, pressing start game by user and later by host. Then game is
-        created."""
+        """Ensure game is created when both players are ready."""
 
         response = self.client.get(
             f'/api/v1/rooms/{self.room.id}/',
@@ -150,10 +144,7 @@ class RoomTestCase(APITestCase):
         self.assertIsNotNone(data.get('game_id'))
 
     def test_start_game_after_10_sec(self):
-        """Test checking pressing start by second user after 10 seconds.
-
-        Game isn't created. Players can press start again.
-        """
+        """Ensure game not created when only one player is ready."""
 
         response = self.client.get(
             f'/api/v1/rooms/{self.room.id}/',

@@ -15,7 +15,7 @@ from dice.apps.rounds.tests.factories import RoundFactory
 
 
 class NonAPIRoundTestCase(TestCase):
-    """Tests checking counting points fot each figure."""
+    """Tests counting points for each figure."""
 
     def setUp(self):
         self.round = RoundFactory()

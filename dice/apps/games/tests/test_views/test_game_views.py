@@ -7,7 +7,7 @@ from dice.apps.rounds.tests.factories import RoundFactory
 
 
 class GameTestCase(APITestCase):
-    """Tests for games' views."""
+    """Games' views tests."""
 
     @classmethod
     def setUpTestData(cls):
@@ -35,7 +35,7 @@ class GameTestCase(APITestCase):
         self.assertEqual(len(response.json().get('all_rounds')), 1)
 
     def test_get_two_rounds_queryset(self):
-        """Test get two round form the same game queryset."""
+        """Test get queryset of two rounds from the same game."""
 
         RoundFactory(game=self.game, user=self.host, figure=Figures.FULL_HOUSE, points=25)
         RoundFactory(game=self.game, user=self.user, figure=Figures.SMALL_STRAIGHT, points=30)

@@ -25,7 +25,7 @@ class RoundTestCase(APITestCase):
     # todo(KrysiaEK): 6 testów testujących walidację create round
 
     def test_roll(self):
-        """Test checking rolling again chosen dices."""
+        """Ensure new dices are rolled."""
 
         response = self.client_host.patch(
             f'/api/v1/rounds/{self.game_round.id}/reroll/',
@@ -37,7 +37,7 @@ class RoundTestCase(APITestCase):
         self.assertEqual(response.status_code, 200)
 
     def test_too_many_roll(self):
-        """Test checking if error 403 is raised when player rolled dices 3 times."""
+        """Ensure http 403 is returned after third roll."""
 
         for status_code in [200, 200, 403]:
             response = self.client_host.patch(
@@ -51,7 +51,7 @@ class RoundTestCase(APITestCase):
             self.assertEqual(status_code, response.status_code)
 
     def test_invalid_roll_again(self):
-        """Test checking if error 403 is raised when player wants to roll dice from different round."""
+        """Ensure http 403 is returned when dice from other round are rolled."""
 
         # todo(KrysiaEK): sprawdzic czy właśwciwy status
         game_round2 = RoundFactory()
@@ -65,7 +65,7 @@ class RoundTestCase(APITestCase):
         self.assertEqual(response.status_code, 403)
 
     def test_figure_choice(self):
-        """Test checking figure choice."""
+        """Test figure choice method."""
 
         self.game_round.set_dices(4, 4, 4, 3, 3)
         rounds_before = Round.objects.count()
@@ -82,7 +82,7 @@ class RoundTestCase(APITestCase):
         self.assertEqual(response.json().get('points'), 25)
 
     def test_figure_choice_already_chosen(self):
-        """Test checking if error 403 is raised when player wants to choose already chosen figure."""
+        """Ensure http 403 is returned when figure is taken."""
 
         self.game_round.figure = Figures.FULL_HOUSE
         self.game_round.save()
@@ -96,7 +96,7 @@ class RoundTestCase(APITestCase):
         self.assertEqual(response.status_code, 403)
 
     def test_choose_figure_for_zero_points(self):
-        """Test checking if user got 0 points if she/he chose figure but had wrong configuration of numbers."""
+        """Ensure user get 0 points when had 0 points for chosen figure."""
 
         self.game_round.set_dices(4, 4, 5, 3, 2)
         response = self.client_host.patch(
@@ -110,8 +110,7 @@ class RoundTestCase(APITestCase):
         self.assertEqual(response.json().get('points'), 0)
 
     def test_all_figures_taken(self):
-        """Test checking if error 403 is raised when user try to create round after end of the game (when all figures
-        were chosen)."""
+        """Ensure http 403 is returned after the end of a game."""
 
         self.game_round.figure = Figures.ONE
         self.game_round.save()
@@ -128,7 +127,7 @@ class RoundTestCase(APITestCase):
         self.assertEqual(response.status_code, 403)
 
     def test_figure_choice_with_extra_points_yatzy(self):
-        """Test checking if user got extra points for second yatzy."""
+        """Ensure user got extra points for second yatzy."""
 
         self.game_round.set_dices(4, 4, 4, 4, 4)
         RoundFactory(game=self.game, user=self.host, figure=Figures.YATZY, points=50)
@@ -147,7 +146,7 @@ class RoundTestCase(APITestCase):
     # 2. test gdy figura którą ktoś chce wybrać jest już zajęta
 
     def test_figure_choice_with_extra_points_yatzy_wrong(self):
-        """Test checking if user got 0 extra points for yatzy after he/she already chose yatzy figure with 0 points."""
+        """Ensure user got 0 points for yatzy when took 0 for yatzy."""
 
         self.game_round.set_dices(4, 4, 4, 4, 4)
         RoundFactory(game=self.game, user=self.host, figure=Figures.YATZY, points=0)
@@ -162,7 +161,7 @@ class RoundTestCase(APITestCase):
         self.assertEqual(response.json().get('extra_points'), 0)
 
     def test_figure_choice_with_extra_points_63(self):
-        """Test checking if user got 35 extra points for getting 63 or more points for upper figures."""
+        """Ensure user get extra points for 63 points in upper figures."""
 
         self.game_round.set_dices(4, 4, 4, 3, 3)
         RoundFactory(game=self.game, user=self.host, figure=Figures.SIX, points=24)
@@ -179,7 +178,7 @@ class RoundTestCase(APITestCase):
         self.assertEqual(response.json().get('extra_points'), 35)
 
     def test_figure_choice_with_extra_points_63_wrong(self):
-        """Test checking if user got 0 extra points for after completing upper figures but has less than 63 points."""
+        """Ensure user get 0 extra points for uncompleted upper figures."""
 
         self.game_round.set_dices(4, 4, 4, 3, 3)
         RoundFactory(game=self.game, user=self.host, figure=Figures.SIX, points=30)
@@ -196,7 +195,7 @@ class RoundTestCase(APITestCase):
         self.assertEqual(response.json().get('extra_points'), 0)
 
     def test_show_figure_and_points(self):
-        """Test checking getting information about taken figure and points obtained for this figure."""
+        """Test get chosen figures and points."""
 
         self.game_round.figure = Figures.LARGE_STRAIGHT
         self.game_round.points = 40
@@ -209,7 +208,7 @@ class RoundTestCase(APITestCase):
         self.assertEqual(response.json().get('points'), 40)
 
     def test_delete_round(self):
-        """Test checking if error 405 is raised when somebody try to delete round."""
+        """Ensure http 405 is returned when somebody try to delete round."""
 
         response = self.client_user.delete(
             f'/api/v1/rounds/{self.game_round.id}/',
@@ -218,7 +217,7 @@ class RoundTestCase(APITestCase):
         self.assertEqual(response.status_code, 405)
 
     def test_count_possble_points(self):
-        """Test checking counting possible points."""
+        """Test counting possible points."""
 
         self.game_round.set_dices(5, 5, 4, 3, 6)
         response = self.client_host.get(

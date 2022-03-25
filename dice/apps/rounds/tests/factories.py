@@ -3,7 +3,7 @@ from dice.apps.rounds.models import Round, Dice
 
 
 class DiceFactory(factory.django.DjangoModelFactory):
-    """Factory to create dice."""
+    """Factory of ``Dice`` model instances."""
 
     value = factory.fuzzy.FuzzyInteger(1, 6)
 
@@ -12,7 +12,7 @@ class DiceFactory(factory.django.DjangoModelFactory):
 
 
 class RoundFactory(factory.django.DjangoModelFactory):
-    """Factory to create rounds."""
+    """Factory of ``Round`` model instances."""
 
     game = factory.SubFactory('dice.apps.games.tests.factories.GameFactory')
     user = factory.SelfAttribute('game.room.host')

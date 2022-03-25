@@ -3,7 +3,7 @@ from dice.apps.users.models import User
 
 
 class UserFactory(factory.django.DjangoModelFactory):
-    """Factory to create users."""
+    """Factory of ``User`` model instances."""
 
     username = factory.Sequence(lambda n: f'user{n}')
 
