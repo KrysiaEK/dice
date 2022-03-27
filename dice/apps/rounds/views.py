@@ -7,6 +7,7 @@ from rest_framework.exceptions import PermissionDenied
 from dice.apps.rounds.models import Round, Dice
 from dice.apps.rounds.serializers import RoundSerializer
 from dice.apps.rounds.utilities import Figures
+from dice.apps.rounds.permissions import InRoomPermission
 
 
 class RoundViewSet(viewsets.mixins.CreateModelMixin, viewsets.mixins.RetrieveModelMixin, viewsets.GenericViewSet):
@@ -14,8 +15,6 @@ class RoundViewSet(viewsets.mixins.CreateModelMixin, viewsets.mixins.RetrieveMod
     queryset = Round.objects.all()
 
     def extra_validation(self, game):
-        if not (game.room.user == self.request.user or game.room.host == self.request.user):
-            raise PermissionDenied('Spadaj złodzieju tożsamości')
         if Round.objects.filter(user=self.request.user, figure__isnull=True, game=game).exists():
             raise PermissionDenied('Istenieje niezakończona runda, nie można stworzyć kolejnej')
         if Round.objects.filter(user=self.request.user, game=game).count() == 13:
@@ -29,6 +28,8 @@ class RoundViewSet(viewsets.mixins.CreateModelMixin, viewsets.mixins.RetrieveMod
 
     def perform_create(self, serializer):
         game = serializer.validated_data['game']
+        self.permission_classes = [InRoomPermission]
+        self.check_object_permissions(self.request, game)
         self.extra_validation(game)
         super().perform_create(serializer)
 
