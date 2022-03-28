@@ -43,6 +43,7 @@ class RoundTestCase(APITestCase):
     def test_create_first_round_by_user(self):
         room = RoomFactory(user=self.user, host=self.host)
         game = GameFactory(room=room)
+        print(room.user, room.host, self.user)
         response = self.client_user.post(
             f'/api/v1/rounds/',
             data={
@@ -50,7 +51,8 @@ class RoundTestCase(APITestCase):
             },
             format='json',
         )
-        self.assertEqual(response.status_code, 403)
+        print(room.user, room.host, self.user)
+        self.assertEqual(response.status_code, 409)
 
     def test_create_next_round(self):  # host chce założyć round zanim skończył poprzednią
         response = self.client_host.post(
@@ -60,7 +62,7 @@ class RoundTestCase(APITestCase):
             },
             format='json',
         )
-        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.status_code, 409)
 
     def test_create_second_round(self):  # user chce założyć grę, jak już się skończyła runda hosta
         self.game_round.figure = Figures.LARGE_STRAIGHT

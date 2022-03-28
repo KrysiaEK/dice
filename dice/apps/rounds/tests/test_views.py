@@ -51,7 +51,7 @@ class RoundTestCase(APITestCase):
         self.assertEqual(response.status_code, 200)
 
     def test_too_many_roll(self):
-        for status_code in [200, 200, 403]:
+        for status_code in [200, 200, 409]:
             response = self.client_host.patch(
                 f'/api/v1/rounds/{self.game_round.id}/reroll/',
                 data=[
@@ -72,7 +72,7 @@ class RoundTestCase(APITestCase):
             ],
             format='json',
         )
-        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.status_code, 409)
 
     def test_figure_choice(self):
         self.game_round.set_dices(4, 4, 4, 3, 3)
@@ -99,7 +99,7 @@ class RoundTestCase(APITestCase):
             },
             format='json',
         )
-        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.status_code, 409)
 
     def test_choose_figure_for_zero_points(self):
         self.game_round.set_dices(4, 4, 5, 3, 2)
@@ -126,7 +126,7 @@ class RoundTestCase(APITestCase):
             },
             format='json',
         )
-        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.status_code, 409)
 
     def test_figure_choice_with_extra_points_yatzy(self):
         self.game_round.set_dices(4, 4, 4, 4, 4)

@@ -88,7 +88,7 @@ class RoomTestCase(APITestCase):
             f'/api/v1/rooms/{self.room.id}/join/',
             format='json',
         )
-        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.status_code, 409)
 
     def test_leave_room_by_user(self):
         # todo(KrysiaEK): spr czy status 'you left the room'

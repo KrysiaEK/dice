@@ -1,5 +1,5 @@
 from rest_framework import viewsets
-from rest_framework.status import HTTP_201_CREATED, HTTP_403_FORBIDDEN
+from rest_framework.status import HTTP_201_CREATED, HTTP_409_CONFLICT
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from datetime import timedelta
@@ -37,7 +37,7 @@ class RoomViewSet(viewsets.mixins.CreateModelMixin, viewsets.mixins.RetrieveMode
         }
         if Room.objects.filter(host=self.request.user, active=True).exists() or Room.objects.filter(
                 user=self.request.user, active=True).exists():
-            return Response(status=HTTP_403_FORBIDDEN)
+            return Response({"message": "You are a member of other room"}, status=HTTP_409_CONFLICT)
         serializer = self.get_serializer(data=data)
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
@@ -48,9 +48,9 @@ class RoomViewSet(viewsets.mixins.CreateModelMixin, viewsets.mixins.RetrieveMode
     def join(self, request, **kwargs):
         room = self.get_object()
         if room.user:
-            return Response(status=HTTP_403_FORBIDDEN)
+            return Response({"message": "Room is full"}, status=HTTP_409_CONFLICT)
         if request.user == room.host:
-            return Response(status=HTTP_403_FORBIDDEN)
+            return Response({"message": "You already joined"}, status=HTTP_409_CONFLICT)
         room.user = request.user
         room.save()
         return Response({'status': 'joined the room'})
