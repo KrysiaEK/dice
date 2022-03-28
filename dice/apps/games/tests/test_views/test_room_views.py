@@ -3,7 +3,7 @@ from rest_framework.authtoken.models import Token
 from datetime import timedelta
 
 from dice.apps.users.tests.factories import UserFactory
-from dice.apps.games.tests.factories import RoomFactory
+from dice.apps.games.tests.factories import RoomFactory, GameFactory
 from dice.apps.games.models import Room
 
 
@@ -20,7 +20,8 @@ class RoomTestCase(APITestCase):
         self.client_host = self.client_class()
         self.client_host.credentials(HTTP_AUTHORIZATION='Token ' + self.token_host.key)
 
-    # todo: TEST LIST VIEW?
+    # todo (KrysiaEK): TEST LIST VIEW?
+
     """
     def test_list_rooms(self):
         response = self.client_host.get('/api/v1/rooms/list/')
@@ -69,7 +70,7 @@ class RoomTestCase(APITestCase):
         self.assertEqual(host_id, self.user.id)
 
     def test_join_room(self):
-        # todo: sprawdzić czy status joined room
+        # todo (KrysiaEK): sprawdzić czy status joined room
         response = self.client.put(
             f'/api/v1/rooms/{self.room.id}/join/',
             format='json',
@@ -89,11 +90,9 @@ class RoomTestCase(APITestCase):
         )
         self.assertEqual(response.status_code, 403)
 
-    # todo: host chce dołączyć jeszcze raz, i 403
-
     def test_leave_room_by_user(self):
-        # todo: spr czy status 'you left the room'
-        #self.room.refresh_from_db() # dlaczego tutaj to nie jest potrzebne?
+        # todo(KrysiaEK): spr czy status 'you left the room'
+        # self.room.refresh_from_db() # dlaczego tutaj to nie jest potrzebne?
         self.room.user = self.user
         self.room.save()
         response = self.client.post(
@@ -104,9 +103,26 @@ class RoomTestCase(APITestCase):
         self.room.refresh_from_db()
         self.assertEqual(None, self.room.user)
 
-    # todo: test host wychodzi, user zostaje hostem
+    # todo(KrysiaEK): test host wychodzi, user zostaje hostem
 
-    # todo: host wychodzi, ale nie było usera, room nieaktywny
+    # todo(KrysiaEK): host wychodzi, ale nie było usera, room nieaktywny
+
+    def test_leave_room_by_user_not_in_room(self):
+        response = self.client.post(
+            f'/api/v1/rooms/{self.room.id}/leave/',
+            format='json',
+        )
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.json().get('detail'), 'You are not in this room.')
+
+    def test_leave_room_after_game_start(self):
+        GameFactory(room=self.room)
+        response = self.client_host.post(
+            f'/api/v1/rooms/{self.room.id}/leave/',
+            format='json',
+        )
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.json().get('detail'), 'Game already exists.')
 
     """"
     def test_leave_room_by_host(self):
@@ -189,5 +205,24 @@ class RoomTestCase(APITestCase):
         data = response.json()
         self.assertIsNone(data.get('game_id'))
 
-    # todo: test gdy 'start' naciska ta sama osoba
+    # todo(KrysiaEK): test gdy 'start' naciska ta sama osoba
 
+    def test_start_game_by_user_not_in_room(self):
+        response = self.client.post(
+            f'/api/v1/rooms/{self.room.id}/start/',
+            format='json',
+        )
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.json().get('detail'), 'You are not in this room.')
+
+    def test_start_room_after_game_start(self):
+
+        GameFactory(room=self.room)
+        response = self.client_host.post(
+            f'/api/v1/rooms/{self.room.id}/start/',
+            format='json',
+        )
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.json().get('detail'), 'Game already exists.')
+
+    # todo(KrysiaEK): ktoś chce startować gdy nie ma jeszcze drugiego usera
