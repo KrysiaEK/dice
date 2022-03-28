@@ -1,5 +1,4 @@
 from rest_framework import viewsets, status
-from rest_framework.exceptions import PermissionDenied
 from rest_framework.status import HTTP_409_CONFLICT
 from rest_framework.response import Response
 from rest_framework.decorators import action
@@ -8,6 +7,7 @@ from dice.apps.rounds.models import Round, Dice
 from dice.apps.rounds.serializers import RoundSerializer
 from dice.apps.rounds.utilities import Figures
 from dice.apps.rounds.permissions import InRoomPermission
+from dice.apps.rounds.exceptions import RoundExistsError, FiguresTakenError, NotYourRoundError
 
 
 class RoundViewSet(viewsets.mixins.CreateModelMixin, viewsets.mixins.RetrieveModelMixin, viewsets.GenericViewSet):
@@ -16,24 +16,21 @@ class RoundViewSet(viewsets.mixins.CreateModelMixin, viewsets.mixins.RetrieveMod
 
     def extra_validation(self, game):
         if Round.objects.filter(user=self.request.user, figure__isnull=True, game=game).exists():
-            print("TU TEZ")
-            return Response({"message": "Incomplete round exists, can't create new one"}, status=HTTP_409_CONFLICT)
+            raise RoundExistsError
         if Round.objects.filter(user=self.request.user, game=game).count() == 13:
-            print("TRRRR")
-            return Response({"message": "All figures are taken, can't create new round"}, status=HTTP_409_CONFLICT)
+            raise FiguresTakenError
         last_round = Round.objects.filter(game=game).order_by('id').last()
         if last_round is None:
             if game.room.host != self.request.user:
-                print("TUUUUU")
-                return Response({"message": "Not your round"}, status=status.HTTP_409_CONFLICT)
+                raise NotYourRoundError
         elif last_round.user == self.request.user:
-            return Response({"message": "Not your round"}, status=HTTP_409_CONFLICT)
+            raise NotYourRoundError
 
     def perform_create(self, serializer):
         game = serializer.validated_data['game']
         self.permission_classes = [InRoomPermission]
         self.check_object_permissions(self.request, game)
-        #self.extra_validation(game)
+        self.extra_validation(game)
         super().perform_create(serializer)
 
     @action(detail=True, methods=['PATCH'])
