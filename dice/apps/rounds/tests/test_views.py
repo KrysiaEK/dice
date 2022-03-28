@@ -7,8 +7,12 @@ from dice.apps.rounds.models import Round
 
 
 class RoundTestCase(APITestCase):
+    """Tests of ``Round`` views methods."""
+
     @classmethod
     def setUpTestData(cls):
+        """Setup related models required to run tests."""
+
         cls.game_round = RoundFactory()
         cls.game = cls.game_round.game
         cls.host = cls.game.room.host
@@ -25,7 +29,7 @@ class RoundTestCase(APITestCase):
     # todo(KrysiaEK): 6 testów testujących walidację create round
 
     def test_roll(self):
-        """Ensure new dices are rolled."""
+        """Ensure new dices are properly rolled."""
 
         response = self.client_host.patch(
             f'/api/v1/rounds/{self.game_round.id}/reroll/',
@@ -51,7 +55,7 @@ class RoundTestCase(APITestCase):
             self.assertEqual(status_code, response.status_code)
 
     def test_invalid_roll_again(self):
-        """Ensure http 403 is returned when dice from other round are rolled."""
+        """Ensure http 403 is returned when dice from wrong round are rolled."""
 
         # todo(KrysiaEK): sprawdzic czy właśwciwy status
         game_round2 = RoundFactory()
@@ -65,7 +69,7 @@ class RoundTestCase(APITestCase):
         self.assertEqual(response.status_code, 403)
 
     def test_figure_choice(self):
-        """Test figure choice method."""
+        """Ensure figure is properly chosen and points are assigned."""
 
         self.game_round.set_dices(4, 4, 4, 3, 3)
         rounds_before = Round.objects.count()
@@ -195,7 +199,7 @@ class RoundTestCase(APITestCase):
         self.assertEqual(response.json().get('extra_points'), 0)
 
     def test_show_figure_and_points(self):
-        """Test get chosen figures and points."""
+        """Ensure chosen figure and assigned points are properly displayed."""
 
         self.game_round.figure = Figures.LARGE_STRAIGHT
         self.game_round.points = 40
@@ -217,7 +221,7 @@ class RoundTestCase(APITestCase):
         self.assertEqual(response.status_code, 405)
 
     def test_count_possble_points(self):
-        """Test counting possible points."""
+        """Ensure possible points are properly calculated."""
 
         self.game_round.set_dices(5, 5, 4, 3, 6)
         response = self.client_host.get(

@@ -8,10 +8,12 @@ from dice.apps.games.models import Room
 
 
 class RoomTestCase(APITestCase):
-    """Rooms' views tests."""
+    """Tests of ``Room`` views methods."""
 
     @classmethod
     def setUpTestData(cls):
+        """Setup related models required to run tests."""
+
         cls.user = UserFactory()
         cls.room = RoomFactory(user=None)
 

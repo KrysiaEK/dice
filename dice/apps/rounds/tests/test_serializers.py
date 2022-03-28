@@ -7,10 +7,12 @@ from dice.apps.rounds.tests.factories import RoundFactory
 
 
 class RoundTestCase(APITestCase):
-    """Rounds' serializers tests."""
+    """Tests of ``Round`` serializer methods."""
 
     @classmethod
     def setUpTestData(cls):
+        """Setup related models required to run tests."""
+
         cls.game_round = RoundFactory()
         cls.game = cls.game_round.game
         cls.host = cls.game.room.host
@@ -25,7 +27,7 @@ class RoundTestCase(APITestCase):
         self.client_user.credentials(HTTP_AUTHORIZATION='Token ' + self.token_user.key)
 
     def test_create_first_round_by_host(self):
-        """Test creating round."""
+        """Ensure round is properly created."""
 
         room = RoomFactory(user=self.user, host=self.host)
         game = GameFactory(room=room)

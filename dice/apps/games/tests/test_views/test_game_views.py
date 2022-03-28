@@ -7,10 +7,12 @@ from dice.apps.rounds.tests.factories import RoundFactory
 
 
 class GameTestCase(APITestCase):
-    """Games' views tests."""
+    """Tests of ``Game`` views methods."""
 
     @classmethod
     def setUpTestData(cls):
+        """Setup related models required to run tests."""
+
         cls.game = GameFactory()
         cls.host = cls.game.room.host
         cls.user = cls.game.room.user
@@ -24,7 +26,7 @@ class GameTestCase(APITestCase):
         self.client_user.credentials(HTTP_AUTHORIZATION='Token ' + self.token_user.key)
 
     def test_get_one_round_queryset(self):
-        """Test get one round queryset."""
+        """Ensure one round queryset is displayed."""
 
         RoundFactory(game=self.game, user=self.host, figure=Figures.FULL_HOUSE, points=25)
         response = self.client_host.get(
@@ -35,7 +37,7 @@ class GameTestCase(APITestCase):
         self.assertEqual(len(response.json().get('all_rounds')), 1)
 
     def test_get_two_rounds_queryset(self):
-        """Test get queryset of two rounds from the same game."""
+        """Ensure two rounds queryset is displayed."""
 
         RoundFactory(game=self.game, user=self.host, figure=Figures.FULL_HOUSE, points=25)
         RoundFactory(game=self.game, user=self.user, figure=Figures.SMALL_STRAIGHT, points=30)
@@ -47,7 +49,7 @@ class GameTestCase(APITestCase):
         self.assertEqual(len(response.json().get('all_rounds')), 2)
 
     def test_get_rounds_from_two_games_queryset(self):
-        """Test get two rounds queryset from two different games."""
+        """Ensure two rounds queryset from two different games is displayed."""
 
         game2 = GameFactory()
         RoundFactory(game=self.game, user=self.host, figure=Figures.FULL_HOUSE, points=0)
