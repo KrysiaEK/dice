@@ -6,4 +6,4 @@
 !manage.py
 !Pipfile
 !Pipfile.lock
-!start-local.sh
+!.devops/docker/start.sh
