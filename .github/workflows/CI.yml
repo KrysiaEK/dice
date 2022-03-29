@@ -1,0 +1,20 @@
+---
+name: CI
+'on':
+  push:
+  workflow_dispatch:
+
+jobs:
+   tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v3
+      - name: build docker-compose services
+        run: docker-compose build
+      - name: test
+        run: |
+          docker-compose run \
+            --no-deps \
+            --entrypoint "python manage.py test dice" \
+            web
