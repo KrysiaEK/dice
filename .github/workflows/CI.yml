@@ -15,6 +15,8 @@ jobs:
       - name: test
         run: |
           docker-compose run \
+            -e DATABASE_URL="sqlite:///db3.sqlite3" \
+            -e DJANGO_SECRET_KEY="test" \
             --no-deps \
             --entrypoint "python manage.py test dice" \
             web
