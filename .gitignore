@@ -157,6 +157,7 @@ Thumbs.db
 # others
 .env
 .idea
+jtest.xml
 
 # docker database
 data/

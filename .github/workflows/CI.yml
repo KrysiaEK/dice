@@ -17,6 +17,17 @@ jobs:
           docker-compose run \
             -e DATABASE_URL="sqlite:///db3.sqlite3" \
             -e DJANGO_SECRET_KEY="test" \
+            -e TEST_OUTPUT_FILE_NAME="junit.xml" \
+            -v "./:/code" \
             --no-deps \
             --entrypoint "python manage.py test dice" \
             web
+      - name: publish unit test report
+        uses: EnricoMi/publish-unit-test-result-action@v1.31
+        if: always()
+        with:
+          github_token: "${{ secrets.GITHUB_TOKEN }}"
+          files: junit.xml
+          comment_mode: update last
+          check_name: unit test report
+          report_individual_runs: true
