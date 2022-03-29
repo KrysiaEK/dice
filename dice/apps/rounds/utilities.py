@@ -2,10 +2,7 @@ import random
 
 
 def roll_dices():
-    dices = []
-    for i in range(5):
-        dices.append(random.randint(1, 6))
-    return dices
+    return [random.randint(1, 6) for i in range(5)]
 
 
 class Figures:
