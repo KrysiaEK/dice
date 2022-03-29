@@ -158,3 +158,5 @@ Thumbs.db
 .env
 .idea
 
+# docker database
+data/

@@ -6,12 +6,10 @@ services:
     volumes:
       - ./data/db:/var/lib/postgresql/data
     env_file:
-      -  docker.env
+      - docker.env
 
   web:
     build: .
-    volumes:
-      - .:/code
     ports:
       - "8000:8000"
     env_file:

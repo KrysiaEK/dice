@@ -1,7 +1,9 @@
 *
 
-!apps/*
-!config/*
+!dice/apps/*
+!dice/config/*
+!dice/init.py
 !manage.py
 !Pipfile
 !Pipfile.lock
+!start-local.sh
