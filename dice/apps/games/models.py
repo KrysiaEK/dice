@@ -6,6 +6,8 @@ from dice.apps.rounds.models import Round, Dice
 
 
 class Room(models.Model):
+    """Model representing dice game's room."""
+
     host = models.ForeignKey('users.User', on_delete=models.CASCADE, blank=True, null=True, related_name="room_host")
     user = models.ForeignKey('users.User', on_delete=models.SET_NULL, blank=True, null=True,
                              related_name="second_player")
@@ -16,9 +18,13 @@ class Room(models.Model):
 
 
 class Game(models.Model):
+    """Model representing dice game's game."""
+
     room = models.OneToOneField(Room, on_delete=models.CASCADE)
 
     def count_final_points(self):
+        """Count and get players' points in the game."""
+
         final_points = self.round_set.values('user').annotate(points_sum=Sum(F('points') + F('extra_points')))
         try:
             host_points = final_points.get(user=self.room.host)['points_sum']
@@ -31,6 +37,8 @@ class Game(models.Model):
         return host_points, user_points
 
     def update_players_ranking(self):
+        """Count and update players' ranking points based on elo ratings."""
+
         host_points, user_points = self.count_final_points()
         start_host_score = self.room.host.score
         start_user_score = self.room.user.score
