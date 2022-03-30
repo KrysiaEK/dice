@@ -3,7 +3,7 @@ from rest_framework.authtoken.models import Token
 from datetime import timedelta
 
 from dice.apps.users.tests.factories import UserFactory
-from dice.apps.games.tests.factories import RoomFactory
+from dice.apps.games.tests.factories import RoomFactory, GameFactory
 from dice.apps.games.models import Room
 
 
@@ -95,7 +95,6 @@ class RoomTestCase(APITestCase):
         """Ensure user not in room after leaving room."""
 
         # todo(KrysiaEK): spr czy status 'you left the room'
-
         self.room.user = self.user
         self.room.save()
         response = self.client.post(
@@ -109,6 +108,27 @@ class RoomTestCase(APITestCase):
     # todo(KrysiaEK): test host wychodzi, user zostaje hostem
 
     # todo(KrysiaEK): host wychodzi, ale nie było usera, room nieaktywny
+
+    def test_leave_room_by_user_not_in_room(self):
+        """Ensure 403 is returned when user isn't in room and wants to leave."""
+
+        response = self.client.post(
+            f'/api/v1/rooms/{self.room.id}/leave/',
+            format='json',
+        )
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.json().get('detail'), 'You are not in this room.')
+
+    def test_leave_room_after_game_start(self):
+        """Ensure 403 is returned when user try to leave after game start."""
+
+        GameFactory(room=self.room)
+        response = self.client_host.post(
+            f'/api/v1/rooms/{self.room.id}/leave/',
+            format='json',
+        )
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.json().get('detail'), 'Game already exists.')
 
     def test_start_game(self):
         """Ensure game is created when both players are ready."""
@@ -183,3 +203,26 @@ class RoomTestCase(APITestCase):
         self.assertIsNone(data.get('game_id'))
 
     # todo(KrysiaEK): test gdy 'start' naciska ta sama osoba
+
+    def test_start_game_by_user_not_in_room(self):
+        """Ensure 403 is returned when user try to create not his/her game."""
+
+        response = self.client.post(
+            f'/api/v1/rooms/{self.room.id}/start/',
+            format='json',
+        )
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.json().get('detail'), 'You are not in this room.')
+
+    def test_start_room_after_game_start(self):
+        """Ensure 403 is returned when user try to create game after start."""
+
+        GameFactory(room=self.room)
+        response = self.client_host.post(
+            f'/api/v1/rooms/{self.room.id}/start/',
+            format='json',
+        )
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.json().get('detail'), 'Game already exists.')
+
+    # todo(KrysiaEK): ktoś chce startować gdy nie ma jeszcze drugiego usera

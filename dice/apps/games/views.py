@@ -5,10 +5,10 @@ from rest_framework.decorators import action
 from datetime import timedelta
 from django.utils import timezone
 
-from dice.apps.games.decorators import user_is_authenticated, user_in_room, game_not_exists
 from dice.apps.games.models import Room, Game
 from dice.apps.games.serializers import RoomSerializer, GameSerializer
 from dice.apps.rounds.serializers import RoundSerializer
+from dice.apps.games.permissions import InRoomPermission, GameNotExists
 
 
 class RoomViewSet(viewsets.mixins.CreateModelMixin, viewsets.mixins.RetrieveModelMixin, viewsets.GenericViewSet):
@@ -58,7 +58,6 @@ class RoomViewSet(viewsets.mixins.CreateModelMixin, viewsets.mixins.RetrieveMode
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=HTTP_201_CREATED, headers=headers)
 
-    @user_is_authenticated
     @action(detail=True, methods=['PUT'])
     def join(self, request, **kwargs):
         """Join ``Room`` instance by authenticated user.
@@ -80,10 +79,7 @@ class RoomViewSet(viewsets.mixins.CreateModelMixin, viewsets.mixins.RetrieveMode
         room.save()
         return Response({'status': 'joined the room'})
 
-    @game_not_exists
-    @user_in_room
-    @user_is_authenticated
-    @action(detail=True, methods=['POST'])
+    @action(detail=True, methods=['POST'], permission_classes=[InRoomPermission, GameNotExists])
     def leave(self, request, **kwargs):
         """Leave ``Room`` instance by authenticated user.
 
@@ -111,9 +107,7 @@ class RoomViewSet(viewsets.mixins.CreateModelMixin, viewsets.mixins.RetrieveMode
         room.save()
         return Response({'status': 'you left the room'})
 
-    @user_in_room
-    @game_not_exists
-    @action(detail=True, methods=['POST'])
+    @action(detail=True, methods=['POST'], permission_classes=[InRoomPermission, GameNotExists])
     def start(self, request, **kwargs):
         """Create ``Game`` instance by two authenticated users.
 
@@ -127,6 +121,8 @@ class RoomViewSet(viewsets.mixins.CreateModelMixin, viewsets.mixins.RetrieveMode
         """
 
         room = self.get_object()
+        if room.host is None or room.user is None:
+            return Response({'status': 'waiting for second user'})
         if room.start_game is None or room.start_game + timedelta(seconds=10) < timezone.now():
             room.start_game = timezone.now()
             room.who_started_game = request.user

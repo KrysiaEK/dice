@@ -12,7 +12,7 @@ class Room(models.Model):
     user = models.ForeignKey('users.User', on_delete=models.SET_NULL, blank=True, null=True,
                              related_name="second_player")
     active = models.BooleanField(default=True)
-    time_of_creation = models.DateTimeField(default=timezone.now())
+    time_of_creation = models.DateTimeField(default=timezone.now)
     start_game = models.DateTimeField(null=True, blank=True)
     who_started_game = models.ForeignKey('users.User', on_delete=models.SET_NULL, blank=True, null=True)
 

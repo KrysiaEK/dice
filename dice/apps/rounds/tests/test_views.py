@@ -3,6 +3,7 @@ from rest_framework.authtoken.models import Token
 
 from dice.apps.rounds.utilities import Figures
 from dice.apps.rounds.tests.factories import RoundFactory
+from dice.apps.users.tests.factories import UserFactory
 from dice.apps.rounds.models import Round
 
 
@@ -12,21 +13,37 @@ class RoundTestCase(APITestCase):
     @classmethod
     def setUpTestData(cls):
         """Setup related models required to run tests."""
-
         cls.game_round = RoundFactory()
         cls.game = cls.game_round.game
         cls.host = cls.game.room.host
         cls.user = cls.game.room.user
+        cls.user2 = UserFactory()
 
     def setUp(self):
         self.token_host = Token.objects.create(user=self.host)
         self.token_user = Token.objects.create(user=self.user)
+        self.token_user2 = Token.objects.create(user=self.user2)
         self.client_host = self.client_class()
         self.client_host.credentials(HTTP_AUTHORIZATION='Token ' + self.token_host.key)
         self.client_user = self.client_class()
         self.client_user.credentials(HTTP_AUTHORIZATION='Token ' + self.token_user.key)
+        self.client_user2 = self.client_class()
+        self.client_user2.credentials(HTTP_AUTHORIZATION='Token ' + self.token_user2.key)
 
     # todo(KrysiaEK): 6 testów testujących walidację create round
+
+    def test_create_round_user_not_in_room(self):
+        """Ensure http 403 is returned when user not in room."""
+
+        response = self.client_user2.post(
+            '/api/v1/rounds/',
+            data={
+                'game': self.game.id,
+            },
+            format='json',
+        )
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.json().get('detail'), 'You are not in this room.')
 
     def test_roll(self):
         """Ensure new dices are properly rolled."""
@@ -145,7 +162,7 @@ class RoundTestCase(APITestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json().get('extra_points'), 50)
 
-    #todo (KrysiaEK):
+    # todo (KrysiaEK):
     # 1. test gdy ktoś chce wybrać figurę gdy nie jego kolej
     # 2. test gdy figura którą ktoś chce wybrać jest już zajęta
 
