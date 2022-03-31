@@ -18,3 +18,4 @@ services:
       - docker.env
     depends_on:
       - db
+    image: krysiaek/dice
