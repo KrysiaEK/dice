@@ -2,12 +2,13 @@ import random
 from django.db import models
 from django.db.models import Sum
 
-from dice.apps.rounds.utilities import Figures, roll_dice
+from dice.apps.rounds.utilities import Figures
+from dice.apps.rounds.logic.migrations.defaults import default_dice_value, default_dice_factory
 
 
 class Dice(models.Model):
 
-    value = models.PositiveSmallIntegerField(default=roll_dice)
+    value = models.PositiveSmallIntegerField(default=default_dice_value)
 
     def reroll(self):
         self.value = random.randint(1, 6)
@@ -23,15 +24,15 @@ class Round(models.Model):
     game = models.ForeignKey('games.Game', on_delete=models.CASCADE)
     user = models.ForeignKey('users.User', on_delete=models.CASCADE)
     dice1 = models.OneToOneField(Dice, on_delete=models.CASCADE, related_name='round_as_first_dice',
-                                 default=Dice.objects.create)
+                                 default=default_dice_factory)
     dice2 = models.OneToOneField(Dice, on_delete=models.CASCADE, related_name='round_as_second_dice',
-                                 default=Dice.objects.create)
+                                 default=default_dice_factory)
     dice3 = models.OneToOneField(Dice, on_delete=models.CASCADE, related_name='round_as_third_dice',
-                                 default=Dice.objects.create)
+                                 default=default_dice_factory)
     dice4 = models.OneToOneField(Dice, on_delete=models.CASCADE, related_name='round_as_fourth_dice',
-                                 default=Dice.objects.create)
+                                 default=default_dice_factory)
     dice5 = models.OneToOneField(Dice, on_delete=models.CASCADE, related_name='round_as_fifth_dice',
-                                 default=Dice.objects.create)
+                                 default=default_dice_factory)
     turn = models.PositiveSmallIntegerField(choices=TURN_CHOICES, default=1)
     figure = models.PositiveIntegerField(blank=True, null=True, choices=Figures.Choices)
     points = models.PositiveIntegerField(blank=True, null=True)

@@ -1,12 +1,8 @@
 import random
 
 
-def roll_dice():
-    return random.randint(1, 6)
-
-
 def roll_dices():
-    return [roll_dice() for i in range(5)]
+    return [random.randint(1, 6) for i in range(5)]
 
 
 class Figures:
