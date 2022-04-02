@@ -20,21 +20,21 @@ goal is to score as many points as possible.
 version: "3.9"
 
 services:
-db:
-image: postgres
-volumes:
-- ./data/db:/var/lib/postgresql/data
-env_file:
-- docker.env
+  db:
+    image: postgres
+    volumes:
+      - ./data/db:/var/lib/postgresql/data
+    env_file:
+      - docker.env
 
-web:
-ports:
-- "8000:8000"
-env_file:
-- docker.env
-depends_on:
-- db
-image: krysiaek/dice
+  web:
+    image: krysiaek/dice
+    ports:
+      - "8000:8000"
+    env_file:
+      - docker.env
+    depends_on:
+      - db
 ```
 
 2.  Create file docker.env with the following content:
