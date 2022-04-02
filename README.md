@@ -39,7 +39,7 @@ services:
 
 2.  Create file docker.env with the following content:
 ```
-SECRET_DAJNGO_KEY=random_value
+DJANGO_SECRET_KEY=random_value
 POSTGRES_NAME=postgres
 POSTGRES_USER=postgres
 POSTGRES_PASSWORD=postgres
@@ -59,4 +59,4 @@ The project works on port 8000.
 2. Run ```docker-compose build```
 3. Run test command to make sure everything is in order:
 ```docker-compose run --entrypoint "python manage.py test dice" web```
-4. ```docker-compose up```
+4. Start the development server with command: ```docker-compose up```
