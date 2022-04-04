@@ -1,5 +1,6 @@
 from rest_framework.test import APITestCase
 from rest_framework.authtoken.models import Token
+from rest_framework import status
 
 from dice.apps.rounds.utilities import Figures
 from dice.apps.games.tests.factories import GameFactory
@@ -33,7 +34,7 @@ class GameTestCase(APITestCase):
             f'/api/v1/games/{self.game.id}/rounds/',
             format='json',
         )
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.json().get('all_rounds')), 1)
 
     def test_get_two_rounds_queryset(self):
@@ -45,7 +46,7 @@ class GameTestCase(APITestCase):
             f'/api/v1/games/{self.game.id}/rounds/',
             format='json',
         )
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.json().get('all_rounds')), 2)
 
     def test_get_rounds_from_two_games_queryset(self):
@@ -58,5 +59,5 @@ class GameTestCase(APITestCase):
             f'/api/v1/games/{self.game.id}/rounds/',
             format='json',
         )
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.json().get('all_rounds')), 1)

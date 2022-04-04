@@ -1,5 +1,6 @@
 from rest_framework.test import APITestCase
 from rest_framework.authtoken.models import Token
+from rest_framework import status
 
 from dice.apps.rounds.utilities import Figures
 from dice.apps.games.tests.factories import RoomFactory, GameFactory
@@ -38,7 +39,7 @@ class RoundTestCase(APITestCase):
             },
             format='json',
         )
-        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         data = response.json()
         self.assertTrue(data.get('dice1').get('value') < 7)
         self.assertTrue(data.get('dice2').get('value') < 7)
@@ -47,7 +48,7 @@ class RoundTestCase(APITestCase):
         self.assertTrue(data.get('dice5').get('value') < 7)
 
     def test_create_first_round_by_user(self):
-        """Ensure http 403 is returned when second player try to be first."""
+        """Ensure http 409 is returned when second player try to be first."""
 
         room = RoomFactory(user=self.user, host=self.host)
         game = GameFactory(room=room)
@@ -58,10 +59,10 @@ class RoundTestCase(APITestCase):
             },
             format='json',
         )
-        self.assertEqual(response.status_code, 409)
+        self.assertEqual(response.status_code, status.HTTP_409_CONFLICT)
 
     def test_create_next_round(self):
-        """Ensure http 403 is returned when first round is unfinished."""
+        """Ensure http 409 is returned when first round is unfinished."""
 
         response = self.client_host.post(
             f'/api/v1/rounds/',
@@ -70,7 +71,7 @@ class RoundTestCase(APITestCase):
             },
             format='json',
         )
-        self.assertEqual(response.status_code, 409)
+        self.assertEqual(response.status_code, status.HTTP_409_CONFLICT)
 
     def test_create_second_round(self):
         """Ensure second round is created."""
@@ -84,7 +85,7 @@ class RoundTestCase(APITestCase):
             },
             format='json',
         )
-        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     def test_create_third_round(self):
         """Ensure third round is created."""
@@ -99,4 +100,4 @@ class RoundTestCase(APITestCase):
             },
             format='json',
         )
-        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)

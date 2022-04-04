@@ -1,5 +1,4 @@
 from rest_framework import viewsets, status
-from rest_framework.status import HTTP_409_CONFLICT
 from rest_framework.response import Response
 from rest_framework.decorators import action
 
@@ -19,15 +18,15 @@ class RoundViewSet(viewsets.mixins.CreateModelMixin, viewsets.mixins.RetrieveMod
     # TODO(KrysiaEK): zrobić z tego permissions
     def extra_validation(self, game):
         if Round.objects.filter(user=self.request.user, figure__isnull=True, game=game).exists():
-            raise RoundExistsError
+            raise RoundExistsError()
         if Round.objects.filter(user=self.request.user, game=game).count() == 13:
-            raise FiguresTakenError
+            raise FiguresTakenError()
         last_round = Round.objects.filter(game=game).order_by('id').last()
         if last_round is None:
             if game.room.host != self.request.user:
-                raise NotYourRoundError
+                raise NotYourRoundError()
         elif last_round.user == self.request.user:
-            raise NotYourRoundError
+            raise NotYourRoundError()
 
     def perform_create(self, serializer):
         """Create ``Round`` instance by authenticated user."""
@@ -53,15 +52,15 @@ class RoundViewSet(viewsets.mixins.CreateModelMixin, viewsets.mixins.RetrieveMod
 
         game_round = self.get_object()
         if game_round.turn >= 3:
-            return Response({"message": "You already rolled twice"}, status=HTTP_409_CONFLICT)
+            return Response({"message": "You already rolled twice"}, status=status.HTTP_409_CONFLICT)
         if game_round.user != request.user:
-            return Response({"message": "Not your round"}, status=HTTP_409_CONFLICT)
+            return Response({"message": "Not your round"}, status=status.HTTP_409_CONFLICT)
         game_dices = [game_round.dice1.id, game_round.dice2.id, game_round.dice3.id, game_round.dice4.id,
                       game_round.dice5.id]
         dices_to_reroll = request.data
         for dice in dices_to_reroll:
             if dice not in game_dices:
-                return Response(status=HTTP_409_CONFLICT)
+                return Response(status=status.HTTP_409_CONFLICT)
         for dice in dices_to_reroll:
             dice = Dice.objects.get(id=dice)
             dice.reroll()
@@ -86,10 +85,10 @@ class RoundViewSet(viewsets.mixins.CreateModelMixin, viewsets.mixins.RetrieveMod
 
         game_round = self.get_object()
         if game_round.user != request.user:
-            return Response({"message": "Not your round"}, status=HTTP_409_CONFLICT)
+            return Response({"message": "Not your round"}, status=status.HTTP_409_CONFLICT)
         chosen_figure = request.data.get('figure')
         if game_round.game.round_set.all().filter(user=request.user, figure=chosen_figure).exists():
-            return Response({"message": "Figure already chosen"}, status=HTTP_409_CONFLICT)
+            return Response({"message": "Figure already chosen"}, status=status.HTTP_409_CONFLICT)
         game_round.figure = chosen_figure
         game_round.points = game_round.count_points()
         game_round.extra_points = game_round.count_extra_points()

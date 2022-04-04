@@ -1,5 +1,6 @@
 from unittest import TestCase
 
+from rest_framework import status
 from rest_framework.test import APITestCase
 from rest_framework.authtoken.models import Token
 
@@ -40,7 +41,7 @@ class GameTestCase(APITestCase):
         )
         self.assertEqual(response.json().get('host_points'), 37)
         self.assertEqual(response.json().get('user_points'), 55)
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_count_final_points_with_extra_points(self):
         """Ensure points are properly calculated when extra points are assigned."""
@@ -55,7 +56,7 @@ class GameTestCase(APITestCase):
         )
         self.assertEqual(response.json().get('host_points'), 37)
         self.assertEqual(response.json().get('user_points'), 115)
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_count_final_points_round_is_none(self):
         """Ensure starting points are 0."""
@@ -66,7 +67,7 @@ class GameTestCase(APITestCase):
         )
         self.assertEqual(response.json().get('host_points'), 0)
         self.assertEqual(response.json().get('user_points'), 0)
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_count_final_points_round_user_is_none(self):
         """Ensure that after first round second player has 0 points."""
@@ -78,7 +79,7 @@ class GameTestCase(APITestCase):
         )
         self.assertEqual(response.json().get('host_points'), 25)
         self.assertEqual(response.json().get('user_points'), 0)
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
 
 class NonAPIGameTestCase(TestCase):

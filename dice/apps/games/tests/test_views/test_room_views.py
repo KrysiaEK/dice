@@ -1,6 +1,8 @@
 from rest_framework.test import APITestCase
 from rest_framework.authtoken.models import Token
+from rest_framework import status
 from datetime import timedelta
+
 
 from dice.apps.users.tests.factories import UserFactory
 from dice.apps.games.tests.factories import RoomFactory, GameFactory
@@ -32,13 +34,13 @@ class RoomTestCase(APITestCase):
         rooms_before = Room.objects.count()
         response = self.client.post('/api/v1/rooms/')
         rooms_after = Room.objects.count()
-        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(rooms_after, rooms_before + 1)
         host_id = response.json().get('host')
         self.assertEqual(host_id, self.user.id)
 
     def test_create_room_user_in_two_rooms(self):
-        """Ensure http 403 is returned when user is in active room."""
+        """Ensure http 409 is returned when user is in active room."""
 
         room = RoomFactory()
         room.host = self.user
@@ -46,7 +48,7 @@ class RoomTestCase(APITestCase):
         rooms_before = Room.objects.count()
         response = self.client.post('/api/v1/rooms/')
         rooms_after = Room.objects.count()
-        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.status_code, status.HTTP_409_CONFLICT)
         self.assertEqual(rooms_after, rooms_before)
 
     def test_create_room_user_in_two_rooms_one_inactive(self):
@@ -59,7 +61,7 @@ class RoomTestCase(APITestCase):
         rooms_before = Room.objects.count()
         response = self.client.post('/api/v1/rooms/')
         rooms_after = Room.objects.count()
-        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(rooms_after, rooms_before + 1)
         host_id = response.json().get('host')
         self.assertEqual(host_id, self.user.id)
@@ -72,13 +74,13 @@ class RoomTestCase(APITestCase):
             f'/api/v1/rooms/{self.room.id}/join/',
             format='json',
         )
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.room.refresh_from_db()
         user_id = self.room.user.id
         self.assertEqual(user_id, self.user.id)
 
     def test_join_room_user_exists(self):
-        """Ensure http 403 is returned when user try to join full room."""
+        """Ensure http 409 is returned when user try to join full room."""
 
         user = UserFactory()
         self.room.user = user
@@ -87,7 +89,7 @@ class RoomTestCase(APITestCase):
             f'/api/v1/rooms/{self.room.id}/join/',
             format='json',
         )
-        self.assertEqual(response.status_code, 409)
+        self.assertEqual(response.status_code, status.HTTP_409_CONFLICT)
 
     # todo(KrysiaEK): host chce dołączyć jeszcze raz, i 403
 
@@ -101,7 +103,7 @@ class RoomTestCase(APITestCase):
             f'/api/v1/rooms/{self.room.id}/leave/',
             format='json',
         )
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.room.refresh_from_db()
         self.assertEqual(None, self.room.user)
 
@@ -116,7 +118,7 @@ class RoomTestCase(APITestCase):
             f'/api/v1/rooms/{self.room.id}/leave/',
             format='json',
         )
-        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
         self.assertEqual(response.json().get('detail'), 'You are not in this room.')
 
     def test_leave_room_after_game_start(self):
@@ -127,7 +129,7 @@ class RoomTestCase(APITestCase):
             f'/api/v1/rooms/{self.room.id}/leave/',
             format='json',
         )
-        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
         self.assertEqual(response.json().get('detail'), 'Game already exists.')
 
     def test_start_game(self):
@@ -137,7 +139,7 @@ class RoomTestCase(APITestCase):
             f'/api/v1/rooms/{self.room.id}/',
             format='json',
         )
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.json()
         self.assertIsNone(data.get('game_id'))
         response = self.client.put(
@@ -149,19 +151,19 @@ class RoomTestCase(APITestCase):
             f'/api/v1/rooms/{self.room.id}/start/',
             format='json',
         )
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         response = self.client_host.post(
             f'/api/v1/rooms/{self.room.id}/start/',
             format='json',
         )
-        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         data = response.json()
         self.assertIsNotNone(data.get('game_id'))
         response = self.client.get(
             f'/api/v1/rooms/{self.room.id}/',
             format='json',
         )
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.json()
         self.assertIsNotNone(data.get('game_id'))
 
@@ -172,7 +174,7 @@ class RoomTestCase(APITestCase):
             f'/api/v1/rooms/{self.room.id}/',
             format='json',
         )
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.json()
         self.assertIsNone(data.get('game_id'))
         response = self.client.put(
@@ -185,7 +187,7 @@ class RoomTestCase(APITestCase):
             f'/api/v1/rooms/{self.room.id}/start/',
             format='json',
         )
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.room.refresh_from_db()
         self.room.start_game = self.room.start_game - timedelta(seconds=11)
         self.room.save()
@@ -193,12 +195,12 @@ class RoomTestCase(APITestCase):
             f'/api/v1/rooms/{self.room.id}/start/',
             format='json',
         )
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         response = self.client.get(
             f'/api/v1/rooms/{self.room.id}/',
             format='json',
         )
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.json()
         self.assertIsNone(data.get('game_id'))
 
@@ -211,7 +213,7 @@ class RoomTestCase(APITestCase):
             f'/api/v1/rooms/{self.room.id}/start/',
             format='json',
         )
-        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
         self.assertEqual(response.json().get('detail'), 'You are not in this room.')
 
     def test_start_room_after_game_start(self):
@@ -222,7 +224,7 @@ class RoomTestCase(APITestCase):
             f'/api/v1/rooms/{self.room.id}/start/',
             format='json',
         )
-        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
         self.assertEqual(response.json().get('detail'), 'Game already exists.')
 
     # todo(KrysiaEK): ktoś chce startować gdy nie ma jeszcze drugiego usera
