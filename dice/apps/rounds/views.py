@@ -11,9 +11,12 @@ from dice.apps.rounds.exceptions import RoundExistsError, FiguresTakenError, Not
 
 
 class RoundViewSet(viewsets.mixins.CreateModelMixin, viewsets.mixins.RetrieveModelMixin, viewsets.GenericViewSet):
+    """Views set of ``Round`` model."""
+
     serializer_class = RoundSerializer
     queryset = Round.objects.all()
 
+    # TODO(KrysiaEK): zrobić z tego permissions
     def extra_validation(self, game):
         if Round.objects.filter(user=self.request.user, figure__isnull=True, game=game).exists():
             raise RoundExistsError
@@ -27,6 +30,8 @@ class RoundViewSet(viewsets.mixins.CreateModelMixin, viewsets.mixins.RetrieveMod
             raise NotYourRoundError
 
     def perform_create(self, serializer):
+        """Create ``Round`` instance by authenticated user."""
+
         game = serializer.validated_data['game']
         self.permission_classes = [InRoomPermission]
         self.check_object_permissions(self.request, game)
@@ -35,6 +40,17 @@ class RoundViewSet(viewsets.mixins.CreateModelMixin, viewsets.mixins.RetrieveMod
 
     @action(detail=True, methods=['PATCH'])
     def reroll(self, request, **kwargs):
+        """Update dices' values.
+
+        Following validation is performed to ensure ``Round`` instance
+        will have proper state:
+
+        + dices' values can be changed at most twice
+        + dices are rolled by right player
+        + dice is property of this round
+
+        """
+
         game_round = self.get_object()
         if game_round.turn >= 3:
             return Response({"message": "You already rolled twice"}, status=HTTP_409_CONFLICT)
@@ -55,6 +71,19 @@ class RoundViewSet(viewsets.mixins.CreateModelMixin, viewsets.mixins.RetrieveMod
 
     @action(detail=True, methods=['PATCH'])
     def figure_choice(self, request, **kwargs):
+        """Choose figure and save points.
+
+        New ``Round`` instance is created. After last round
+        game ends and players' rankings are updated.
+
+        Following validation is performed to ensure ``Round`` instance
+        will have proper state:
+
+        + right player is choosing
+        + choose only unoccupied figures
+
+        """
+
         game_round = self.get_object()
         if game_round.user != request.user:
             return Response({"message": "Not your round"}, status=HTTP_409_CONFLICT)
@@ -72,16 +101,12 @@ class RoundViewSet(viewsets.mixins.CreateModelMixin, viewsets.mixins.RetrieveMod
         return Response(
             data={'points': game_round.points, 'extra_points': game_round.extra_points, "round_id": new_round.id})
 
-    # napisz test dla update_player_rank robię 26 round i puszczam figur choice, wywyołuję figure_choice --> sprawdzić czy wywołuje się funkcja update_player_rank
-    # for choice in choices
-
     @action(detail=True, methods=['GET'])
     def count_possible_points(self, request, **kwargs):
+        """Count possible points for dices' values configuration."""
+
         game_round = self.get_object()
         possible_points = []
         for choice in Figures.Choices:
             possible_points.append(game_round.count_points(choice[0]))
         return Response(data={'possible_points': possible_points})
-
-# zrobić sprawdzanie kiedy ktoś zrobił ostatnio ruch jeśli nie robi przez minutę to druga osoba wygrywa
-# *odświerzanie room --> spr czy ktoś tam jest, jeśli nie to usuwa: DJANGO PERIODIC TASK

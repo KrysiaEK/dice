@@ -80,14 +80,21 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'dice.wsgi.application'
+WSGI_APPLICATION = 'dice.config.wsgi.application'
 
 
 # Database
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
 
 DATABASES = {
-   'default': env.db('DATABASE_URL'),
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': env('POSTGRES_NAME'),
+        'USER': env('POSTGRES_USER'),
+        'PASSWORD': env('POSTGRES_PASSWORD'),
+        'HOST': env('POSTGRES_HOST'),
+        'PORT': 5432,
+    }
 }
 
 
@@ -147,3 +154,6 @@ REST_FRAMEWORK = {
 }
 
 CORS_ALLOW_ALL_ORIGINS = True
+
+TEST_RUNNER = 'xmlrunner.extra.djangotestrunner.XMLTestRunner'
+TEST_OUTPUT_FILE_NAME = env('TEST_OUTPUT_FILE_NAME', default=None)

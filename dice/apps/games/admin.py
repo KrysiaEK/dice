@@ -9,5 +9,5 @@ class RoomAdmin(admin.ModelAdmin):
 
 
 @admin.register(Game)
-class RoomAdmin(admin.ModelAdmin):
+class GameAdmin(admin.ModelAdmin):
     pass

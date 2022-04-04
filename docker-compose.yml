@@ -6,10 +6,12 @@ services:
     volumes:
       - ./data/db:/var/lib/postgresql/data
     env_file:
-      -  docker.env
+      - docker.env
 
   web:
-    build: .
+    build:
+      context: .
+      dockerfile: ./.devops/docker/Dockerfile
     volumes:
       - .:/code
     ports:
@@ -18,3 +20,4 @@ services:
       - docker.env
     depends_on:
       - db
+    image: krysiaek/dice

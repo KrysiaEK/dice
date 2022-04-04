@@ -7,8 +7,12 @@ from dice.apps.rounds.tests.factories import RoundFactory
 
 
 class RoundTestCase(APITestCase):
+    """Tests of ``Round`` serializer methods."""
+
     @classmethod
     def setUpTestData(cls):
+        """Setup related models required to run tests."""
+
         cls.game_round = RoundFactory()
         cls.game = cls.game_round.game
         cls.host = cls.game.room.host
@@ -23,6 +27,8 @@ class RoundTestCase(APITestCase):
         self.client_user.credentials(HTTP_AUTHORIZATION='Token ' + self.token_user.key)
 
     def test_create_first_round_by_host(self):
+        """Ensure round is properly created."""
+
         room = RoomFactory(user=self.user, host=self.host)
         game = GameFactory(room=room)
         response = self.client_host.post(
@@ -41,6 +47,8 @@ class RoundTestCase(APITestCase):
         self.assertTrue(data.get('dice5').get('value') < 7)
 
     def test_create_first_round_by_user(self):
+        """Ensure http 403 is returned when second player try to be first."""
+
         room = RoomFactory(user=self.user, host=self.host)
         game = GameFactory(room=room)
         response = self.client_user.post(
@@ -52,7 +60,9 @@ class RoundTestCase(APITestCase):
         )
         self.assertEqual(response.status_code, 409)
 
-    def test_create_next_round(self):  # host chce założyć round zanim skończył poprzednią
+    def test_create_next_round(self):
+        """Ensure http 403 is returned when first round is unfinished."""
+
         response = self.client_host.post(
             f'/api/v1/rounds/',
             data={
@@ -62,7 +72,9 @@ class RoundTestCase(APITestCase):
         )
         self.assertEqual(response.status_code, 409)
 
-    def test_create_second_round(self):  # user chce założyć grę, jak już się skończyła runda hosta
+    def test_create_second_round(self):
+        """Ensure second round is created."""
+
         self.game_round.figure = Figures.LARGE_STRAIGHT
         self.game_round.save()
         response = self.client_user.post(
@@ -75,6 +87,8 @@ class RoundTestCase(APITestCase):
         self.assertEqual(response.status_code, 201)
 
     def test_create_third_round(self):
+        """Ensure third round is created."""
+
         self.game_round.figure = Figures.LARGE_STRAIGHT
         self.game_round.save()
         RoundFactory(game=self.game, user=self.user, figure=Figures.FIVE)
