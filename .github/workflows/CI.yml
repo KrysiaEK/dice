@@ -1,11 +1,11 @@
 ---
 name: CI
-'on':
+on:
   push:
   workflow_dispatch:
 
 jobs:
-   tests:
+  tests:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -15,11 +15,9 @@ jobs:
       - name: test
         run: |
           docker-compose run \
-            -e DATABASE_URL="sqlite:///db3.sqlite3" \
             -e DJANGO_SECRET_KEY="test" \
             -e TEST_OUTPUT_FILE_NAME="junit.xml" \
             -v "${{ github.workspace }}:/code" \
-            --no-deps \
             --entrypoint "python manage.py test dice" \
             web
       - name: publish unit test report
