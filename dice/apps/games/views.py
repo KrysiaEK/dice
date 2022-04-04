@@ -12,10 +12,14 @@ from dice.apps.games.permissions import InRoomPermission, GameNotExists
 
 
 class RoomViewSet(viewsets.mixins.CreateModelMixin, viewsets.mixins.RetrieveModelMixin, viewsets.GenericViewSet):
+    """Views set of ``Room`` model."""
+
     queryset = Room.objects.all()
     serializer_class = RoomSerializer
 
     def list(self, request, *args, **kwargs):
+        """List all active ``Room`` instances."""
+
         room = self.get_object()
         time_of_expire = room.time_of_creation + timedelta(hours=10)
         queryset = self.filter_queryset(Room.objects.filter(
@@ -31,6 +35,16 @@ class RoomViewSet(viewsets.mixins.CreateModelMixin, viewsets.mixins.RetrieveMode
         serializer.save()
 
     def create(self, request, *args, **kwargs):
+        """Create ``Room`` instance hosted by authenticated user.
+
+        Following validation is performed to ensure ``Room`` instance
+        will have proper state:
+
+        + player is not a host of other active room
+        + user(host) is not a member of other active room
+
+        """
+
         data = {
             'host': self.request.user.id,
             **request.data
@@ -46,6 +60,16 @@ class RoomViewSet(viewsets.mixins.CreateModelMixin, viewsets.mixins.RetrieveMode
 
     @action(detail=True, methods=['PUT'])
     def join(self, request, **kwargs):
+        """Join ``Room`` instance by authenticated user.
+
+        Following validation is performed to ensure ``Room`` instance
+        will have proper state:
+
+        + room is not full
+        + host don't join again
+
+        """
+
         room = self.get_object()
         if room.user:
             return Response(status=HTTP_403_FORBIDDEN)
@@ -57,6 +81,19 @@ class RoomViewSet(viewsets.mixins.CreateModelMixin, viewsets.mixins.RetrieveMode
 
     @action(detail=True, methods=['POST'], permission_classes=[InRoomPermission, GameNotExists])
     def leave(self, request, **kwargs):
+        """Leave ``Room`` instance by authenticated user.
+
+        If host left room then second player become a host,
+        if there is no second player then room become inactive.
+
+        Following validation is performed to ensure ``Room`` instance
+        will have proper state:
+
+        + user is member of a room
+        + game is not created
+
+        """
+
         room = self.get_object()
         if self.request.user == room.host:
             if room.user:
@@ -72,6 +109,17 @@ class RoomViewSet(viewsets.mixins.CreateModelMixin, viewsets.mixins.RetrieveMode
 
     @action(detail=True, methods=['POST'], permission_classes=[InRoomPermission, GameNotExists])
     def start(self, request, **kwargs):
+        """Create ``Game`` instance by two authenticated users.
+
+        Following validation is performed to ensure ``Game`` instance
+        will have proper state:
+
+        + user is member of room
+        + game is not created
+        + one player press start once
+
+        """
+
         room = self.get_object()
         if room.host is None or room.user is None:
             return Response({'status': 'waiting for second user'})
@@ -88,17 +136,23 @@ class RoomViewSet(viewsets.mixins.CreateModelMixin, viewsets.mixins.RetrieveMode
 
 
 class GameViewSet(viewsets.ReadOnlyModelViewSet):
+    """Views set of ``Game`` model."""
+
     serializer_class = GameSerializer
     queryset = Game.objects.all()
 
     @action(detail=True, methods=['GET'])
     def count_final_points(self, request, **kwargs):
+        """Get and count players' final points."""
+
         game = self.get_object()
         host_points, user_points = game.count_final_points()
         return Response(data={'host_points': host_points, 'user_points': user_points})
 
     @action(detail=True, methods=['GET'])
     def rounds(self, request, **kwargs):
+        """Get all game's ``Round`` instances."""
+
         game = self.get_object()
         rounds_queryset = game.round_set.all().order_by('id')
         rounds = RoundSerializer(rounds_queryset, many=True)

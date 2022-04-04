@@ -5,6 +5,8 @@ from dice.apps.users.models import User
 
 
 class UserSerializer(serializers.ModelSerializer):
+    """Serializer of ``User`` model instances."""
+
     score = serializers.IntegerField(read_only=True)
 
     class Meta:
@@ -18,5 +20,7 @@ class UserSerializer(serializers.ModelSerializer):
     )
 
     def create(self, validated_data):
+        """Create ``User`` instance with a hashed password."""
+
         validated_data['password'] = make_password(validated_data.get('password'))
         return super(UserSerializer, self).create(validated_data)

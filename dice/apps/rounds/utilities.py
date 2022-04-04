@@ -2,6 +2,8 @@ import random
 
 
 def roll_dices():
+    """Draw dices' values."""
+
     dices = []
     for i in range(5):
         dices.append(random.randint(1, 6))
@@ -9,6 +11,8 @@ def roll_dices():
 
 
 class Figures:
+    """Configurations od dices' values."""
+
     ONE = 1
     TWO = 2
     THREE = 3
