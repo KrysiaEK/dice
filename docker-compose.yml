@@ -9,7 +9,9 @@ services:
       - docker.env
 
   web:
-    build: .
+    build:
+      context: .
+      dockerfile: ./.devops/docker/Dockerfile
     volumes:
       - .:/code
     ports:

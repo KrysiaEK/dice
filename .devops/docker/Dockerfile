@@ -7,12 +7,13 @@ WORKDIR /code
 
 RUN pip install pipenv
 COPY Pipfile Pipfile.lock ./
-RUN pipenv install --system --deploy --ignore-pipfile
+RUN pipenv install --system --deploy --ignore-pipfile --dev
+
 
 COPY . ./
 
 EXPOSE 8000
 
-COPY start-local.sh /start.sh
+COPY ./.devops/docker/start.sh /start.sh
 RUN chmod +x /start.sh
 CMD ["/start.sh"]
