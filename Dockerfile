@@ -6,8 +6,8 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 WORKDIR /code
 
 RUN pip install pipenv
-COPY Pipfile Pipfile.lock
-RUN pipenv install
+COPY Pipfile Pipfile.lock ./
+RUN pipenv install --system --deploy --ignore-pipfile
 
 COPY . ./
 

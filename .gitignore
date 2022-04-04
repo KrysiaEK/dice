@@ -157,4 +157,6 @@ Thumbs.db
 # others
 .env
 .idea
+
+# docker database
 data/

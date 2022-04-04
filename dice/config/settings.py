@@ -80,7 +80,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'dice.wsgi.application'
+WSGI_APPLICATION = 'dice.config.wsgi.application'
 
 
 # Database
