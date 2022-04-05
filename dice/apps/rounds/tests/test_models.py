@@ -1,8 +1,7 @@
 from unittest import TestCase
 
-from dice.apps.rounds.utilities import Figures
 from dice.apps.rounds.tests.factories import RoundFactory
-
+from dice.apps.rounds.utilities import Figures
 
 # todo(KrysiaEK): Dice Tests:
 #  1. create

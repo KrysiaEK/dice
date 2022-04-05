@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from dice.apps.games.models import Room, Game
+from dice.apps.games.models import Game, Room
 
 
 class GameSerializer(serializers.ModelSerializer):

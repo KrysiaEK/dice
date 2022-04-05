@@ -1,9 +1,9 @@
-from rest_framework.test import APITestCase
 from rest_framework.authtoken.models import Token
+from rest_framework.test import APITestCase
 
-from dice.apps.rounds.utilities import Figures
-from dice.apps.games.tests.factories import RoomFactory, GameFactory
+from dice.apps.games.tests.factories import GameFactory, RoomFactory
 from dice.apps.rounds.tests.factories import RoundFactory
+from dice.apps.rounds.utilities import Figures
 
 
 class RoundTestCase(APITestCase):

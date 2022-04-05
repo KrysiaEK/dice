@@ -1,5 +1,6 @@
 import factory.fuzzy
-from dice.apps.rounds.models import Round, Dice
+
+from dice.apps.rounds.models import Dice, Round
 
 
 class DiceFactory(factory.django.DjangoModelFactory):

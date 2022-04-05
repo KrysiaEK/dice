@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from dice.apps.games.models import Room, Game
+from dice.apps.games.models import Game, Room
 
 
 @admin.register(Room)

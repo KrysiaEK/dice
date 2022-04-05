@@ -1,8 +1,8 @@
 from django.db import models
-from django.db.models import Sum, F
+from django.db.models import F, Sum
 from django.utils import timezone
 
-from dice.apps.rounds.models import Round, Dice
+from dice.apps.rounds.models import Dice, Round
 
 
 class Room(models.Model):

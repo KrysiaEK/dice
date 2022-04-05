@@ -1,11 +1,11 @@
 from unittest import TestCase
 
-from rest_framework.test import APITestCase
 from rest_framework.authtoken.models import Token
+from rest_framework.test import APITestCase
 
-from dice.apps.rounds.utilities import Figures
 from dice.apps.games.tests.factories import GameFactory
 from dice.apps.rounds.tests.factories import RoundFactory
+from dice.apps.rounds.utilities import Figures
 
 
 class GameTestCase(APITestCase):

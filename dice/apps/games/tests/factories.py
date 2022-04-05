@@ -1,5 +1,6 @@
 import factory.fuzzy
-from dice.apps.games.models import Room, Game
+
+from dice.apps.games.models import Game, Room
 
 
 class RoomFactory(factory.django.DjangoModelFactory):

@@ -1,6 +1,6 @@
 from rest_framework import viewsets
-from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.authtoken.models import Token
+from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.response import Response
 
 from dice.apps.users.models import User

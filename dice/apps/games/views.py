@@ -1,14 +1,15 @@
-from rest_framework import viewsets
-from rest_framework.status import HTTP_201_CREATED, HTTP_403_FORBIDDEN
-from rest_framework.response import Response
-from rest_framework.decorators import action
 from datetime import timedelta
-from django.utils import timezone
 
-from dice.apps.games.models import Room, Game
-from dice.apps.games.serializers import RoomSerializer, GameSerializer
+from django.utils import timezone
+from rest_framework import viewsets
+from rest_framework.decorators import action
+from rest_framework.response import Response
+from rest_framework.status import HTTP_201_CREATED, HTTP_403_FORBIDDEN
+
+from dice.apps.games.models import Game, Room
+from dice.apps.games.permissions import GameNotExists, InRoomPermission
+from dice.apps.games.serializers import GameSerializer, RoomSerializer
 from dice.apps.rounds.serializers import RoundSerializer
-from dice.apps.games.permissions import InRoomPermission, GameNotExists
 
 
 class RoomViewSet(viewsets.mixins.CreateModelMixin, viewsets.mixins.RetrieveModelMixin, viewsets.GenericViewSet):

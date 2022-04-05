@@ -1,10 +1,11 @@
-from rest_framework.test import APITestCase
-from rest_framework.authtoken.models import Token
 from datetime import timedelta
 
-from dice.apps.users.tests.factories import UserFactory
-from dice.apps.games.tests.factories import RoomFactory, GameFactory
+from rest_framework.authtoken.models import Token
+from rest_framework.test import APITestCase
+
 from dice.apps.games.models import Room
+from dice.apps.games.tests.factories import GameFactory, RoomFactory
+from dice.apps.users.tests.factories import UserFactory
 
 
 class RoomTestCase(APITestCase):

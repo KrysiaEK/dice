@@ -1,13 +1,13 @@
 from rest_framework import viewsets
-from rest_framework.status import HTTP_403_FORBIDDEN
-from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
+from rest_framework.response import Response
+from rest_framework.status import HTTP_403_FORBIDDEN
 
-from dice.apps.rounds.models import Round, Dice
+from dice.apps.rounds.models import Dice, Round
+from dice.apps.rounds.permissions import InRoomPermission
 from dice.apps.rounds.serializers import RoundSerializer
 from dice.apps.rounds.utilities import Figures
-from dice.apps.rounds.permissions import InRoomPermission
 
 
 class RoundViewSet(viewsets.mixins.CreateModelMixin, viewsets.mixins.RetrieveModelMixin, viewsets.GenericViewSet):
