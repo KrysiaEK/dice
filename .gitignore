@@ -158,3 +158,6 @@ Thumbs.db
 .env
 .idea
 
+data/
+
+junit.xml

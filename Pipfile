@@ -19,7 +19,6 @@ django-migration-linter = "~=4.0"
 dotenv-linter = "~=0.3"
 safety = "~=1.10"
 wemake-python-styleguide = "~=0.16"
-flake8-django = "~=1.1"
 
 [requires]
 python_version = "3.10"
