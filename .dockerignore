@@ -1,0 +1,9 @@
+*
+
+!dice/apps/*
+!dice/config/*
+!dice/init.py
+!manage.py
+!Pipfile
+!Pipfile.lock
+!.devops/docker/start.sh

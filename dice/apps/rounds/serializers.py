@@ -8,6 +8,8 @@ from dice.apps.users.serializers import UserSerializer
 
 
 class DiceSerializer(serializers.ModelSerializer):
+    """Serializer of ``Dice`` model instances."""
+
     value = serializers.IntegerField(required=False)
 
     class Meta:
@@ -16,6 +18,8 @@ class DiceSerializer(serializers.ModelSerializer):
 
 
 class RoundSerializer(serializers.ModelSerializer):
+    """Serializer of ``Round`` model instances."""
+
     dice1 = DiceSerializer(required=False)
     dice2 = DiceSerializer(required=False)
     dice3 = DiceSerializer(required=False)
@@ -31,6 +35,8 @@ class RoundSerializer(serializers.ModelSerializer):
         fields = ['dice1', 'dice2', 'dice3', 'dice4', 'dice5', 'turn', 'user', 'game', 'points', 'extra_points']
 
     def create(self, validated_data):
+        """Create ``Round`` instance and set dices' values."""
+
         dices = []
         for i in range(5):
             dice = Dice.objects.create(value=random.randint(1, 6))
