@@ -1,5 +1,4 @@
-from rest_framework import viewsets
-from rest_framework.status import HTTP_201_CREATED, HTTP_403_FORBIDDEN
+from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from datetime import timedelta
@@ -51,12 +50,12 @@ class RoomViewSet(viewsets.mixins.CreateModelMixin, viewsets.mixins.RetrieveMode
         }
         if Room.objects.filter(host=self.request.user, active=True).exists() or Room.objects.filter(
                 user=self.request.user, active=True).exists():
-            return Response(status=HTTP_403_FORBIDDEN)
+            return Response({"message": "You are a member of other room"}, status=status.HTTP_409_CONFLICT)
         serializer = self.get_serializer(data=data)
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
         headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=HTTP_201_CREATED, headers=headers)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
     @action(detail=True, methods=['PUT'])
     def join(self, request, **kwargs):
@@ -72,9 +71,9 @@ class RoomViewSet(viewsets.mixins.CreateModelMixin, viewsets.mixins.RetrieveMode
 
         room = self.get_object()
         if room.user:
-            return Response(status=HTTP_403_FORBIDDEN)
+            return Response({"message": "Room is full"}, status=status.HTTP_409_CONFLICT)
         if request.user == room.host:
-            return Response(status=HTTP_403_FORBIDDEN)
+            return Response({"message": "You already joined"}, status=status.HTTP_409_CONFLICT)
         room.user = request.user
         room.save()
         return Response({'status': 'joined the room'})
@@ -132,7 +131,7 @@ class RoomViewSet(viewsets.mixins.CreateModelMixin, viewsets.mixins.RetrieveMode
             return Response({'status': 'waiting for second user'})
         game = Game.objects.create(room=room)
         game.save()
-        return Response(data={'game_id': game.id}, status=HTTP_201_CREATED)
+        return Response(data={'game_id': game.id}, status=status.HTTP_201_CREATED)
 
 
 class GameViewSet(viewsets.ReadOnlyModelViewSet):

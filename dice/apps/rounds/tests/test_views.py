@@ -1,5 +1,6 @@
 from rest_framework.test import APITestCase
 from rest_framework.authtoken.models import Token
+from rest_framework import status
 
 from dice.apps.rounds.utilities import Figures
 from dice.apps.rounds.tests.factories import RoundFactory
@@ -42,7 +43,7 @@ class RoundTestCase(APITestCase):
             },
             format='json',
         )
-        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
         self.assertEqual(response.json().get('detail'), 'You are not in this room.')
 
     def test_roll(self):
@@ -55,26 +56,30 @@ class RoundTestCase(APITestCase):
             ],
             format='json',
         )
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_too_many_roll(self):
-        """Ensure http 403 is returned after third roll."""
+        """Ensure http 409 is returned after third roll."""
 
-        for status_code in [200, 200, 403]:
-            response = self.client_host.patch(
-                f'/api/v1/rounds/{self.game_round.id}/reroll/',
-                data=[
-                    self.game_round.dice1.id, self.game_round.dice2.id
-                ],
-                format='json',
-            )
-            self.game_round.refresh_from_db()
-            self.assertEqual(status_code, response.status_code)
+        status_code = (status.HTTP_200_OK, status.HTTP_200_OK, status.HTTP_409_CONFLICT)
+
+        for sc in status_code:
+            with self.subTest():
+                response = self.client_host.patch(
+                    f'/api/v1/rounds/{self.game_round.id}/reroll/',
+                    data=[
+                        self.game_round.dice1.id, self.game_round.dice2.id
+                    ],
+                    format='json',
+                )
+                self.game_round.refresh_from_db()
+                self.assertEqual(sc, response.status_code)
+                if response.status_code == status.HTTP_409_CONFLICT:
+                    self.assertEqual(response.json().get('message'), "You already rolled twice")
 
     def test_invalid_roll_again(self):
-        """Ensure http 403 is returned when dice from wrong round are rolled."""
+        """Ensure http 409 is returned when dice from wrong round are rolled."""
 
-        # todo(KrysiaEK): sprawdzic czy właśwciwy status
         game_round2 = RoundFactory()
         response = self.client_host.patch(
             f'/api/v1/rounds/{self.game_round.id}/reroll/',
@@ -83,7 +88,7 @@ class RoundTestCase(APITestCase):
             ],
             format='json',
         )
-        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.status_code, status.HTTP_409_CONFLICT)
 
     def test_figure_choice(self):
         """Ensure figure is properly chosen and points are assigned."""
@@ -97,13 +102,13 @@ class RoundTestCase(APITestCase):
             },
             format='json',
         )
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         rounds_after = Round.objects.count()
         self.assertEqual(rounds_after, rounds_before + 1)
         self.assertEqual(response.json().get('points'), 25)
 
     def test_figure_choice_already_chosen(self):
-        """Ensure http 403 is returned when figure is taken."""
+        """Ensure http 409 is returned when figure is taken."""
 
         self.game_round.figure = Figures.FULL_HOUSE
         self.game_round.save()
@@ -114,7 +119,8 @@ class RoundTestCase(APITestCase):
             },
             format='json',
         )
-        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.status_code, status.HTTP_409_CONFLICT)
+        self.assertEqual(response.json().get('message'), "Figure already chosen")
 
     def test_choose_figure_for_zero_points(self):
         """Ensure user get 0 points when had 0 points for chosen figure."""
@@ -127,11 +133,11 @@ class RoundTestCase(APITestCase):
             },
             format='json',
         )
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.json().get('points'), 0)
 
     def test_all_figures_taken(self):
-        """Ensure http 403 is returned after the end of a game."""
+        """Ensure http 409 is returned after the end of a game."""
 
         self.game_round.figure = Figures.ONE
         self.game_round.save()
@@ -145,7 +151,9 @@ class RoundTestCase(APITestCase):
             },
             format='json',
         )
-        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.status_code, status.HTTP_409_CONFLICT)
+        self.assertEqual(response.json().get('detail'), "All figures are taken, can't create new round")
+
 
     def test_figure_choice_with_extra_points_yatzy(self):
         """Ensure user got extra points for second yatzy."""
@@ -159,7 +167,7 @@ class RoundTestCase(APITestCase):
             },
             format='json',
         )
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.json().get('extra_points'), 50)
 
     # todo (KrysiaEK):
@@ -178,7 +186,7 @@ class RoundTestCase(APITestCase):
             },
             format='json',
         )
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.json().get('extra_points'), 0)
 
     def test_figure_choice_with_extra_points_63(self):
@@ -195,7 +203,7 @@ class RoundTestCase(APITestCase):
             },
             format='json',
         )
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.json().get('extra_points'), 35)
 
     def test_figure_choice_with_extra_points_63_wrong(self):
@@ -212,7 +220,7 @@ class RoundTestCase(APITestCase):
             },
             format='json',
         )
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.json().get('extra_points'), 0)
 
     def test_show_figure_and_points(self):
@@ -225,7 +233,7 @@ class RoundTestCase(APITestCase):
             f'/api/v1/rounds/{self.game_round.id}/',
             format='json',
         )
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.json().get('points'), 40)
 
     def test_delete_round(self):
@@ -235,7 +243,7 @@ class RoundTestCase(APITestCase):
             f'/api/v1/rounds/{self.game_round.id}/',
             format='json',
         )
-        self.assertEqual(response.status_code, 405)
+        self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
 
     def test_count_possble_points(self):
         """Ensure possible points are properly calculated."""
@@ -245,5 +253,5 @@ class RoundTestCase(APITestCase):
             f'/api/v1/rounds/{self.game_round.id}/count_possible_points/',
             format='json',
         )
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.json().get('possible_points'), [0, 0, 3, 4, 10, 6, 0, 0, 0, 30, 0, 0, 23])
