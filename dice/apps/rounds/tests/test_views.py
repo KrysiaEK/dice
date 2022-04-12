@@ -71,11 +71,12 @@ class RoundTestCase(APITestCase):
             )
             self.game_round.refresh_from_db()
             self.assertEqual(status_code, response.status_code)
+            if response.status_code == status.HTTP_409_CONFLICT:
+                self.assertEqual(response.json().get('message'), "You already rolled twice")
 
     def test_invalid_roll_again(self):
         """Ensure http 409 is returned when dice from wrong round are rolled."""
 
-        # todo(KrysiaEK): sprawdzic czy właśwciwy status
         game_round2 = RoundFactory()
         response = self.client_host.patch(
             f'/api/v1/rounds/{self.game_round.id}/reroll/',
@@ -116,6 +117,7 @@ class RoundTestCase(APITestCase):
             format='json',
         )
         self.assertEqual(response.status_code, status.HTTP_409_CONFLICT)
+        self.assertEqual(response.json().get('message'), "Figure already chosen")
 
     def test_choose_figure_for_zero_points(self):
         """Ensure user get 0 points when had 0 points for chosen figure."""
@@ -147,6 +149,8 @@ class RoundTestCase(APITestCase):
             format='json',
         )
         self.assertEqual(response.status_code, status.HTTP_409_CONFLICT)
+        self.assertEqual(response.json().get('detail'), "All figures are taken, can't create new round")
+
 
     def test_figure_choice_with_extra_points_yatzy(self):
         """Ensure user got extra points for second yatzy."""

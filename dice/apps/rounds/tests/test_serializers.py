@@ -60,6 +60,8 @@ class RoundTestCase(APITestCase):
             format='json',
         )
         self.assertEqual(response.status_code, status.HTTP_409_CONFLICT)
+        self.assertEqual(response.json().get('detail'), "Not your round")
+
 
     def test_create_next_round(self):
         """Ensure http 409 is returned when first round is unfinished."""
@@ -72,6 +74,7 @@ class RoundTestCase(APITestCase):
             format='json',
         )
         self.assertEqual(response.status_code, status.HTTP_409_CONFLICT)
+        self.assertEqual(response.json().get('detail'), "Incomplete round exists, can't create new one")
 
     def test_create_second_round(self):
         """Ensure second round is created."""

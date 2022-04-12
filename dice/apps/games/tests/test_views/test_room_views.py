@@ -49,6 +49,7 @@ class RoomTestCase(APITestCase):
         response = self.client.post('/api/v1/rooms/')
         rooms_after = Room.objects.count()
         self.assertEqual(response.status_code, status.HTTP_409_CONFLICT)
+        self.assertEqual(response.json().get('message'), "You are a member of other room")
         self.assertEqual(rooms_after, rooms_before)
 
     def test_create_room_user_in_two_rooms_one_inactive(self):
@@ -69,12 +70,12 @@ class RoomTestCase(APITestCase):
     def test_join_room(self):
         """Ensure user joined room."""
 
-        # todo(KrysiaEK): sprawdzić czy status joined room
         response = self.client.put(
             f'/api/v1/rooms/{self.room.id}/join/',
             format='json',
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.json().get('status'), "joined the room")
         self.room.refresh_from_db()
         user_id = self.room.user.id
         self.assertEqual(user_id, self.user.id)
@@ -90,13 +91,13 @@ class RoomTestCase(APITestCase):
             format='json',
         )
         self.assertEqual(response.status_code, status.HTTP_409_CONFLICT)
+        self.assertEqual(response.json().get('message'), "Room is full")
 
     # todo(KrysiaEK): host chce dołączyć jeszcze raz, i 403
 
     def test_leave_room_by_user(self):
         """Ensure user not in room after leaving room."""
 
-        # todo(KrysiaEK): spr czy status 'you left the room'
         self.room.user = self.user
         self.room.save()
         response = self.client.post(
@@ -104,6 +105,7 @@ class RoomTestCase(APITestCase):
             format='json',
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.json().get('status'), "you left the room")
         self.room.refresh_from_db()
         self.assertEqual(None, self.room.user)
 
