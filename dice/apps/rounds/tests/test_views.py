@@ -61,18 +61,21 @@ class RoundTestCase(APITestCase):
     def test_too_many_roll(self):
         """Ensure http 409 is returned after third roll."""
 
-        for status_code in [status.HTTP_200_OK, status.HTTP_200_OK, status.HTTP_409_CONFLICT]:
-            response = self.client_host.patch(
-                f'/api/v1/rounds/{self.game_round.id}/reroll/',
-                data=[
-                    self.game_round.dice1.id, self.game_round.dice2.id
-                ],
-                format='json',
-            )
-            self.game_round.refresh_from_db()
-            self.assertEqual(status_code, response.status_code)
-            if response.status_code == status.HTTP_409_CONFLICT:
-                self.assertEqual(response.json().get('message'), "You already rolled twice")
+        status_code = (status.HTTP_200_OK, status.HTTP_200_OK, status.HTTP_409_CONFLICT)
+
+        for sc in status_code:
+            with self.subTest():
+                response = self.client_host.patch(
+                    f'/api/v1/rounds/{self.game_round.id}/reroll/',
+                    data=[
+                        self.game_round.dice1.id, self.game_round.dice2.id
+                    ],
+                    format='json',
+                )
+                self.game_round.refresh_from_db()
+                self.assertEqual(sc, response.status_code)
+                if response.status_code == status.HTTP_409_CONFLICT:
+                    self.assertEqual(response.json().get('message'), "You already rolled twice")
 
     def test_invalid_roll_again(self):
         """Ensure http 409 is returned when dice from wrong round are rolled."""
