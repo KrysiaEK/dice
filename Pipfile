@@ -12,6 +12,13 @@ django-cors-headers = "~=3.11"
 
 [dev-packages]
 factory-boy = "~=3.2"
+flake8 = "~=4.0"
+isort = "~=5.10"
+vulture = "~=2.3"
+django-migration-linter = "~=4.0"
+dotenv-linter = "~=0.3"
+safety = "~=1.10"
+wemake-python-styleguide = "~=0.16"
 unittest-xml-reporting = "~=3.2"
 
 [requires]
