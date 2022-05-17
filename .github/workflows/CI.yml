@@ -12,6 +12,19 @@ jobs:
       - uses: actions/checkout@v3
       - name: build docker-compose services
         run: docker-compose build
+      - name: migrate
+        run: |
+          docker-compose run \
+          -e DJANGO_SECRET_KEY="test" \
+          -v "${{ github.workspace }}:/code" \
+          web python manage.py migrate
+      - name: test
+        run: |
+          docker-compose run \
+            -e DJANGO_SECRET_KEY="test" \
+            -e TEST_OUTPUT_FILE_NAME="junit.xml" \
+            -v "${{ github.workspace }}:/code" \
+            web python manage.py test dates_db
       - name: test
         run: |
           docker-compose run \
