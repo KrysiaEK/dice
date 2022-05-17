@@ -2,6 +2,7 @@
 
 !dice/apps/*
 !dice/config/*
+dice/config/.env
 !dice/init.py
 !manage.py
 !Pipfile

@@ -47,7 +47,7 @@ POSTGRES_HOST=db
 ```
 4. Run ```docker-compose pull```
 5. Run test command to make sure everything is in order:
-```docker-compose run --entrypoint "python manage.py test dice" web```
+```docker-compose run web python manage.py test dice```
 6. Start the server:
  ```docker-compose up```
 
@@ -58,5 +58,5 @@ The project works on port 8000.
 1. Clone repository
 2. Run ```docker-compose build```
 3. Run test command to make sure everything is in order:
-```docker-compose run --entrypoint "python manage.py test dice" web```
+```docker-compose run web python manage.py test dice```
 4. Start the development server with command: ```docker-compose up```

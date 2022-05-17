@@ -18,8 +18,7 @@ jobs:
             -e DJANGO_SECRET_KEY="test" \
             -e TEST_OUTPUT_FILE_NAME="junit.xml" \
             -v "${{ github.workspace }}:/code" \
-            --entrypoint "python manage.py test dice" \
-            web
+            web python manage.py test dice
       - name: publish unit test report
         uses: EnricoMi/publish-unit-test-result-action@v1.31
         if: always()
