@@ -24,13 +24,6 @@ jobs:
             -e DJANGO_SECRET_KEY="test" \
             -e TEST_OUTPUT_FILE_NAME="junit.xml" \
             -v "${{ github.workspace }}:/code" \
-            web python manage.py test dates_db
-      - name: test
-        run: |
-          docker-compose run \
-            -e DJANGO_SECRET_KEY="test" \
-            -e TEST_OUTPUT_FILE_NAME="junit.xml" \
-            -v "${{ github.workspace }}:/code" \
             web python manage.py test dice
       - name: publish unit test report
         uses: EnricoMi/publish-unit-test-result-action@v1.31
